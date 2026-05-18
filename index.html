@@ -12,7 +12,7 @@
 body{font-family:'Barlow',sans-serif;background:var(--dark);color:var(--text);padding-bottom:3rem}
 .hdr{background:linear-gradient(180deg,#0d0d20,#0b0b14);border-bottom:3px solid var(--gold);padding:1.2rem 1.2rem .8rem;text-align:center;position:relative}
 .hdr-logo{display:flex;align-items:center;justify-content:center;gap:.8rem}
-.hdr-logo img{width:52px;height:52px;border-radius:50%;border:2px solid var(--gold);object-fit:cover;box-shadow:0 0 18px rgba(212,175,55,.35)}
+.hdr-logo img{width:58px;height:58px;border-radius:50%;border:2px solid rgba(212,175,55,.7);object-fit:cover;box-shadow:0 0 24px rgba(212,175,55,.4),0 0 50px rgba(212,175,55,.1)}
 .hdr-logo-text{font-family:'Bebas Neue';font-size:2.2rem;color:var(--gold);letter-spacing:5px;line-height:1;text-shadow:0 0 30px rgba(212,175,55,.3)}
 .hdr-sub{font-size:.72rem;color:var(--muted);letter-spacing:3px;margin-top:.2rem;text-transform:uppercase}
 .hdr-live{display:inline-flex;align-items:center;gap:.4rem;background:rgba(6,255,165,.1);border:1px solid var(--green);color:var(--green);padding:.25rem .7rem;border-radius:12px;font-size:.7rem;font-weight:800;letter-spacing:1px;margin-top:.6rem}
@@ -79,7 +79,7 @@ tbody tr:last-child td{border-bottom:none}
 
 <div class="hdr">
   <div class="hdr-logo"><img src="jalala_logo.png" alt="PFL Zone"><span class="hdr-logo-text">PRIME eFOOTBALL LEAGUE</span></div>
-  <div class="hdr-sub">Prime eFootball League</div>
+  <div class="hdr-sub">Prime eFootball League · Live Standings</div>
   <div><span class="hdr-live"><span class="live-dot"></span>LIVE STANDINGS</span></div>
 </div>
 
@@ -90,7 +90,7 @@ tbody tr:last-child td{border-bottom:none}
   <button class="itab" id="it-results">✅ Results</button>
   <button class="itab" id="it-fixtures">📅 Fixtures</button>
   <button class="itab" id="it-playoffs">🏆 Playoffs</button>
-  <button class="itab" id="it-goals">⚽ Goals</button>
+  <button class="itab" id="it-goals">🥅 Goals</button>
   <button class="itab" id="it-rules">📜 Rules</button>
 </div>
 
@@ -316,7 +316,7 @@ function renderResults(){
   var el=document.getElementById('secResults');
   if(!tour){el.innerHTML='<div class="empty">No data</div>';return;}
   var done=tour.matches.filter(function(m){ return m.done; }).reverse();
-  if(!done.length){el.innerHTML='<div class="empty"><div class="empty-icon">⚽</div>No results yet</div>';return;}
+  if(!done.length){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div>No results yet</div>';return;}
   var rounds=done.map(function(m){ return m.round; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
   var h='';
   rounds.forEach(function(r){
@@ -525,7 +525,7 @@ function renderPlayoffs(){
   });
   html+='<div style="flex:'+CC+';display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:0 2px">'+
     '<img src="jalala_cup.png" style="width:80%;max-width:120px;height:auto;object-fit:contain;filter:drop-shadow(0 0 20px rgba(212,175,55,0.9));display:block;margin:0 auto">'+
-    '<div style="font-family:\'Bebas Neue\';font-size:clamp(.6rem,.9rem,1rem);letter-spacing:2px;color:var(--gold);text-align:center;margin:.2rem 0 .4rem;text-shadow:0 0 8px rgba(212,175,55,.6)">⚽ FINAL ⚽</div>'+
+    '<div style="font-family:\'Bebas Neue\';font-size:clamp(.6rem,.9rem,1rem);letter-spacing:2px;color:var(--gold);text-align:center;margin:.2rem 0 .4rem;text-shadow:0 0 8px rgba(212,175,55,.6)">🏆 FINAL 🏆</div>'+
     '<div style="width:100%">'+compactCard(finalRound.matches[0])+'</div>'+
     (finalRound.matches[0].winner?'<div style="font-family:\'Bebas Neue\';font-size:clamp(.6rem,.8rem,1rem);color:var(--gold);text-align:center;margin-top:.3rem">🏆 '+finalRound.matches[0].winner.name+'</div>':'')+
     '</div>';
@@ -597,7 +597,7 @@ function renderGoalsRanking(){
   var tour=getTour();
   var el=document.getElementById('secGoals');
   if(!tour){el.innerHTML='<div class="empty">No data</div>';return;}
-  if(!tour.teams.length){el.innerHTML='<div class="empty"><div class="empty-icon">⚽</div>No teams yet</div>';return;}
+  if(!tour.teams.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div>No teams yet</div>';return;}
   var pg={};
   if(tour.bracketRounds) tour.bracketRounds.forEach(function(r){
     r.matches.forEach(function(m){
@@ -618,7 +618,7 @@ function renderGoalsRanking(){
   var max=sorted[0].totalGoals||1;
   var hasPlayoffs=sorted.some(function(t){ return t.playoffGoals>0; });
   var h='<div style="padding:.8rem">'+
-    '<div style="font-family:\'Bebas Neue\';font-size:1.3rem;letter-spacing:3px;color:var(--gold);margin-bottom:.5rem;text-align:center">⚽ Team Goals Ranking</div>';
+    '<div style="font-family:\'Bebas Neue\';font-size:1.3rem;letter-spacing:3px;color:var(--gold);margin-bottom:.5rem;text-align:center">🥅 Team Goals Ranking</div>';
   // Legend
   if(hasPlayoffs){
     h+='<div style="display:flex;justify-content:center;gap:1rem;margin-bottom:1rem;font-size:.65rem;color:var(--muted)">'+
@@ -698,8 +698,8 @@ function updateWinnerTicker(){
     if(fr&&fr.matches[0]&&fr.matches[0].winner) wn=fr.matches[0].winner.name;
   }
   var msg=wn
-    ?'🏆  ⚽ PRIME eFOOTBALL LEAGUE '+(tour.name||'')+' WINNER IS  ★  '+wn.toUpperCase()+'  ★  CONGRATULATIONS  🎉  ⚽  🏆  ⚽ PRIME eFOOTBALL LEAGUE '+(tour.name||'')+' WINNER IS  ★  '+wn.toUpperCase()+'  ★  CONGRATULATIONS  🎉'
-    :'🏆  ⚽ PRIME eFOOTBALL LEAGUE '+(tour.name||'')+' — FINALS UNDERWAY — STAY TUNED!  🏆';
+    ?'🏆  PRIME eFOOTBALL LEAGUE '+(tour.name||'')+' WINNER IS  ★  '+wn.toUpperCase()+'  ★  CONGRATULATIONS  🎉    🏆  PRIME eFOOTBALL LEAGUE '+(tour.name||'')+' WINNER IS  ★  '+wn.toUpperCase()+'  ★  CONGRATULATIONS  🎉'
+    :'🏆  PRIME eFOOTBALL LEAGUE '+(tour.name||'')+' — FINALS UNDERWAY — STAY TUNED!  🏆';
   txTop.textContent=msg; txBot.textContent=msg;
   tTop.style.display='flex'; tBot.style.display='flex';
   document.body.style.paddingTop='2.2rem'; document.body.style.paddingBottom='5rem';

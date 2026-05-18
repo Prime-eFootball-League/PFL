@@ -182,7 +182,7 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div><div class="tb-brand">⚽ PFL Zone</div><div class="tb-sub">Admin Dashboard</div></div>
+  <div><div class="tb-brand"><img src="jalala_logo.png" alt="PFL" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;border:1px solid rgba(212,175,55,.5)"> PFL Zone</div><div class="tb-sub">Admin Dashboard</div></div>
   <div class="tb-right">
     <span id="syncStatus" style="font-size:.7rem;font-weight:700;letter-spacing:.5px;color:var(--muted)">☁️ Firebase</span>
     <span class="warn-badge" id="warnBadge" style="display:none" onclick="showTab('settings')">⚠ Change PW</span>
@@ -562,7 +562,7 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
 <!-- SCORE MODAL -->
 <div class="overlay" id="scoreOverlay">
   <div class="modal">
-    <div class="modal-title" style="color:var(--green)">⚽ Enter Score <button class="modal-close" onclick="closeScore()">✕</button></div>
+    <div class="modal-title" style="color:var(--green)">🥅 Enter Score <button class="modal-close" onclick="closeScore()">✕</button></div>
     <div style="text-align:center;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:.5rem" id="smRound"></div>
     <div id="smEditMode" style="display:none;text-align:center;background:rgba(255,163,0,.1);border:1px solid #ffa300;border-radius:6px;padding:.4rem;margin-bottom:.6rem;font-size:.72rem;color:#ffa300;font-weight:700">✏️ EDITING EXISTING RESULT — stats will be recalculated</div>
     <div class="score-entry">
@@ -1214,7 +1214,7 @@ function saveScore(){
   applyStats(h,a,smH,smA);
   m.homeScore=smH;m.awayScore=smA;m.done=true;m.date=m.date||today();
   closeScore();sdb();updateAll();
-  toast(`⚽ ${h.name} ${smH} – ${smA} ${a.name}`);
+  toast(`🥅 ${h.name} ${smH} – ${smA} ${a.name}`);
   checkPlayoffAlert();
 }
 
@@ -1707,7 +1707,7 @@ function renderBracket(){
   // FINAL center
   bHtml+=`<div style="flex:${centerFlex};display:flex;flex-direction:column;align-items:center;min-width:0;padding:0 2px">
     <img src="jalala_cup.png" style="width:100%;height:auto;max-height:45vw;object-fit:contain;filter:drop-shadow(0 0 20px rgba(212,175,55,0.9));display:block;margin:0 auto">
-    <div style="font-family:'Bebas Neue';font-size:clamp(.6rem,.9rem,1rem);letter-spacing:2px;color:var(--gold);text-align:center;margin:.2rem 0 .4rem;text-shadow:0 0 8px rgba(212,175,55,.6)">⚽ FINAL ⚽</div>
+    <div style="font-family:'Bebas Neue';font-size:clamp(.6rem,.9rem,1rem);letter-spacing:2px;color:var(--gold);text-align:center;margin:.2rem 0 .4rem;text-shadow:0 0 8px rgba(212,175,55,.6)">🏆 FINAL 🏆</div>
     <div style="width:100%">${bCompactCard(finalRound.matches[0])}</div>
     ${finalRound.matches[0].winner?`<div style="font-family:'Bebas Neue';font-size:clamp(.6rem,.8rem,1rem);color:var(--gold);text-align:center;margin-top:.3rem">🏆 ${finalRound.matches[0].winner.name}</div>`:''}
   </div>`;
