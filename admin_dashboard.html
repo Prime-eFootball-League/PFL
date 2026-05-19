@@ -218,8 +218,6 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
         <input type="text" id="regName" placeholder="e.g. FC Prime United">
         <label class="lbl">Coach Name</label>
         <input type="text" id="regCoach" placeholder="Coach name">
-        <label class="lbl">Badge / Emoji</label>
-        <input type="text" id="regBadge" placeholder="e.g. ⚽ or 🔥 or 🦁" maxlength="4">
         <div style="display:flex;gap:.7rem">
           <button class="btn-full btn-gold" onclick="saveRegistryTeam()">💾 SAVE TEAM</button>
           <button class="btn-full btn-outline" onclick="cancelRegistryForm()" style="flex:.4">Cancel</button>
@@ -437,8 +435,13 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
   <div class="tab-content" id="tc-teams">
     <div class="card">
       <div class="card-title">➕ Add Team</div>
-      <label class="lbl">Team Name</label>
-      <input type="text" id="addTeamName" placeholder="Team name">
+      <label class="lbl">Pick from Registry</label>
+      <select id="addTeamSelect" style="width:100%;padding:.6rem;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:'Barlow';font-size:.95rem">
+        <option value="">-- Select a registered team --</option>
+      </select>
+      <div style="text-align:center;color:var(--muted);font-size:.8rem;margin:.5rem 0">— or add new —</div>
+      <label class="lbl">New Team Name</label>
+      <input type="text" id="addTeamName" placeholder="Team name (saves to registry too)">
       <label class="lbl">Coach Name</label>
       <input type="text" id="addCoach" placeholder="Coach name">
       <div id="addGroupRow" style="display:none">
@@ -910,10 +913,21 @@ function wizLaunch(){
 // ═══════════════════════════════════════════
 // OPEN TOURNAMENT DASHBOARD
 // ═══════════════════════════════════════════
+// Ensure all array fields exist — prevents crashes when loading from Firebase
+function normalizeTour(t){
+  if(!t) return t;
+  if(!Array.isArray(t.teams)) t.teams=[];
+  if(!Array.isArray(t.matches)) t.matches=[];
+  if(!Array.isArray(t.groups)) t.groups=[];
+  if(!Array.isArray(t.playoffs)) t.playoffs=[];
+  return t;
+}
+
 function openTour(tid){
   activeTid=tid;
   const tour=getTour();
   if(!tour)return;
+  normalizeTour(tour);
   document.getElementById('viewList').style.display='none';
   document.getElementById('viewWizard').style.display='none';
   document.getElementById('viewDash').style.display='block';
@@ -941,7 +955,7 @@ function showTab(name){
   document.getElementById('tc-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='table')renderTable();
-  if(name==='teams')renderTeams();
+  if(name==='teams'){renderTeams();buildRegistryDropdown();}
   if(name==='playoffs'){renderPlayoffs();checkPlayoffAlertFull();}
   if(name==='rules')loadRulesEditor();
 }
@@ -963,20 +977,63 @@ function buildGroupSel(){
 
 function buildTeamSelects(){
   const tour=getTour();if(!tour)return;
+  normalizeTour(tour);
   const h='<option value="">-- Team --</option>'+tour.teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
   ['schHome','schAway','po1','po2'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=h;});
 }
 
 function addTeam(){
   const tour=getTour();if(!tour)return;
+  normalizeTour(tour);
+  const sel=document.getElementById('addTeamSelect');
+  const selVal=sel?sel.value:'';
+  const g=tour.format==='groups'?document.getElementById('addGroup').value:'';
+
+  if(selVal){
+    // Picked from registry
+    const regTeam=registryTeams.find(x=>x.id===selVal);
+    if(!regTeam){toast('Team not found in registry',true);return;}
+    if(tour.teams.some(t=>t.name.toLowerCase()===regTeam.name.toLowerCase())){
+      toast(`${regTeam.name} is already in this tournament`,true);return;
+    }
+    tour.teams.push({id:'team_'+Date.now(),name:regTeam.name,coach:regTeam.coach||'',group:g,played:0,won:0,drawn:0,lost:0,goalsFor:0,goalsAgainst:0,points:0});
+    if(sel) sel.value='';
+    sdb();buildTeamSelects();renderTeams();buildRegistryDropdown();toast(`${regTeam.name} added!`);
+    return;
+  }
+
+  // New team — save to tournament AND registry
   const n=document.getElementById('addTeamName').value.trim();
   const c=document.getElementById('addCoach').value.trim();
-  if(!n){toast('Enter team name',true);return;}
-  const g=tour.format==='groups'?document.getElementById('addGroup').value:'';
-  tour.teams.push({id:'team_'+Date.now(),name:n,coach:c,group:g,played:0,won:0,drawn:0,lost:0,goalsFor:0,goalsAgainst:0,points:0});
+  if(!n){toast('Select a team or enter a new team name',true);return;}
+  if(tour.teams.some(t=>t.name.toLowerCase()===n.toLowerCase())){
+    toast(`${n} is already in this tournament`,true);return;
+  }
+  const g2=tour.format==='groups'?document.getElementById('addGroup').value:'';
+  tour.teams.push({id:'team_'+Date.now(),name:n,coach:c,group:g2,played:0,won:0,drawn:0,lost:0,goalsFor:0,goalsAgainst:0,points:0});
   document.getElementById('addTeamName').value='';
   document.getElementById('addCoach').value='';
-  sdb();buildTeamSelects();renderTeams();toast(`${n} added!`);
+
+  // Also save to registry if not already there
+  if(!registryTeams.some(t=>t.name.toLowerCase()===n.toLowerCase())){
+    const newReg={id:'reg_'+Date.now(),name:n,coach:c,badge:'⚽',dateCreated:new Date().toISOString().slice(0,10)};
+    registryTeams.push(newReg);
+    saveRegistry();
+    if(window._fbSaveRegTeam) window._fbSaveRegTeam(newReg.id,newReg).catch(err=>console.error('Registry sync failed:',err));
+  }
+
+  sdb();buildTeamSelects();renderTeams();buildRegistryDropdown();toast(`${n} added to tournament & registry!`);
+}
+
+// Populate the registry dropdown in the Add Team form
+function buildRegistryDropdown(){
+  const sel=document.getElementById('addTeamSelect');
+  if(!sel)return;
+  const tour=getTour();
+  const existing=tour?(tour.teams||[]).map(t=>t.name.toLowerCase()):[];
+  const available=registryTeams.filter(t=>!existing.includes(t.name.toLowerCase()));
+  sel.innerHTML='<option value="">-- Select a registered team --</option>'+
+    available.map(t=>`<option value="${t.id}">${t.name}${t.coach?' ('+t.coach+')':''}</option>`).join('');
 }
 
 function deleteTeam(tid){
@@ -996,7 +1053,8 @@ function deleteTeam(tid){
 }
 
 function renderTeams(){
-  const tour=getTour();if(!tour)return;
+  const tour=getTour();
+  if(tour) normalizeTour(tour);if(!tour)return;
   const el=document.getElementById('teamsList');
   if(!tour.teams.length){el.innerHTML='<div class="empty">No teams</div>';return;}
   el.innerHTML=tour.teams.map(t=>`
@@ -1092,7 +1150,8 @@ function deleteFixture(mid){
 }
 
 function renderFixtureList(){
-  const tour=getTour();if(!tour)return;
+  const tour=getTour();
+  if(tour) normalizeTour(tour);if(!tour)return;
   const el=document.getElementById('allFixtures');
   if(!tour.matches.length){el.innerHTML='<div class="empty">No fixtures yet</div>';return;}
   // Trim round names to fix invisible whitespace that breaks grouping
@@ -1136,7 +1195,8 @@ function renderFixtureList(){
 // QUICK SCORE
 // ═══════════════════════════════════════════
 function renderQS(){
-  const tour=getTour();if(!tour)return;
+  const tour=getTour();
+  if(tour) normalizeTour(tour);if(!tour)return;
   // Trim round names to fix any invisible whitespace that could break grouping
   tour.matches.forEach(m=>{if(m.round)m.round=m.round.trim();});
   const pending=tour.matches.filter(m=>!m.done);
@@ -1312,7 +1372,8 @@ function getSortedTeams(teams){
 }
 
 function renderTable(){
-  const tour=getTour();if(!tour)return;
+  const tour=getTour();
+  if(tour) normalizeTour(tour);if(!tour)return;
   const el=document.getElementById('tableView');
   if(!tour.teams.length){el.innerHTML='<div class="empty">No teams registered</div>';return;}
 
@@ -1414,7 +1475,8 @@ function checkPlayoffAlert(){
 }
 
 function checkPlayoffAlertFull(){
-  const tour=getTour();if(!tour)return;
+  const tour=getTour();
+  if(tour) normalizeTour(tour);if(!tour)return;
   const pending=tour.matches.filter(m=>!m.done);
   const alerts=findBoundaryTies(tour);
   const box=document.getElementById('playoffAlertFull');
@@ -1612,7 +1674,8 @@ function deleteTrophyImage(){
 function renderPlayoffs(){renderBracket();}
 
 function renderBracket(){
-  const tour=getTour();if(!tour)return;
+  const tour=getTour();
+  if(tour) normalizeTour(tour);if(!tour)return;
   updateWinnerTickerBtn(tour);
   if(!tour.bracketRounds||!tour.bracketRounds.length){
     document.getElementById('bracketDisplay').style.display='none';
@@ -2265,7 +2328,7 @@ function initRegistrySync(){
       if(idx === -1){ registryTeams.push(ct); changed = true; }
       else { registryTeams[idx] = ct; changed = true; }
     });
-    if(changed){ saveRegistry(); renderRegistry(); }
+    if(changed){ saveRegistry(); renderRegistry(); buildRegistryDropdown(); }
   }).catch(()=>{});
 }
 
@@ -2290,7 +2353,7 @@ function initFirebaseSync(){
       const idx = db.tournaments.findIndex(t => t.id === cloudTour.id);
       if(idx === -1){
         // New tournament from cloud — add it locally
-        db.tournaments.push(cloudTour);
+        db.tournaments.push(normalizeTour(cloudTour));
         changed = true;
       } else {
         const localTour = db.tournaments[idx];
@@ -2298,7 +2361,7 @@ function initFirebaseSync(){
         const localTime = localTour.updatedAt || 0;
         // Only overwrite local if cloud is newer — prevents losing unsaved local work
         if(cloudTime > localTime){
-          db.tournaments[idx] = cloudTour;
+          db.tournaments[idx] = normalizeTour(cloudTour);
           changed = true;
         }
       }

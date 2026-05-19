@@ -278,7 +278,10 @@ function renderPublicRegistry(){
 function loadFromStorage(){
   try{
     var d=localStorage.getItem('pfl_db');
-    if(d) db=JSON.parse(d);
+    if(d){
+      db=JSON.parse(d);
+      if(Array.isArray(db.tournaments)) db.tournaments.forEach(normalizeTour);
+    }
   }catch(e){ db={tournaments:[]}; }
 }
 function saveToStorage(data){
@@ -296,6 +299,16 @@ function syncEnd(){
 }
 
 // ── Firebase fetch ─────────────────────────────────────────────
+// Normalize tournament arrays to prevent crashes
+function normalizeTour(t){
+  if(!t) return t;
+  if(!Array.isArray(t.teams)) t.teams=[];
+  if(!Array.isArray(t.matches)) t.matches=[];
+  if(!Array.isArray(t.groups)) t.groups=[];
+  if(!Array.isArray(t.playoffs)) t.playoffs=[];
+  return t;
+}
+
 function fetchFromFirebase(){
   syncStart();
   // Fetch tournaments
@@ -309,6 +322,7 @@ function fetchFromFirebase(){
       try{ localDb=localRaw?JSON.parse(localRaw):{tournaments:[]}; }
       catch(e){ localDb={tournaments:[]}; }
       tours.forEach(function(t){
+        normalizeTour(t);
         var idx=localDb.tournaments.findIndex(function(x){ return x.id===t.id; });
         if(idx===-1) localDb.tournaments.push(t);
         else localDb.tournaments[idx]=t;
