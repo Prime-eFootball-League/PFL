@@ -201,6 +201,35 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
   <div class="t-list-title">Tournaments</div>
   <div id="tList"><div class="t-empty"><div class="t-empty-icon">🏆</div><p>No tournaments yet.<br>Create one below!</p></div></div>
   <button class="btn-create" onclick="startWizard()">+ CREATE NEW TOURNAMENT</button>
+
+  <!-- ── TEAMS REGISTRY ── -->
+  <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div class="t-list-title" style="margin-bottom:0">👥 Teams Registry</div>
+      <button class="btn-sm" style="border-color:var(--gold);color:var(--gold)" onclick="toggleRegistryForm()">+ New Team</button>
+    </div>
+    <div class="info" style="margin-bottom:1rem">Teams created here exist permanently — visible on the public page even before any tournament starts.</div>
+
+    <!-- New team form (hidden by default) -->
+    <div id="regFormWrap" style="display:none">
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title" id="regFormTitle">➕ New Team</div>
+        <label class="lbl">Team Name</label>
+        <input type="text" id="regName" placeholder="e.g. FC Prime United">
+        <label class="lbl">Coach Name</label>
+        <input type="text" id="regCoach" placeholder="Coach name">
+        <label class="lbl">Badge / Emoji</label>
+        <input type="text" id="regBadge" placeholder="e.g. ⚽ or 🔥 or 🦁" maxlength="4">
+        <div style="display:flex;gap:.7rem">
+          <button class="btn-full btn-gold" onclick="saveRegistryTeam()">💾 SAVE TEAM</button>
+          <button class="btn-full btn-outline" onclick="cancelRegistryForm()" style="flex:.4">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registry list -->
+    <div id="regList"><div class="empty" style="padding:1.5rem">No teams in registry yet</div></div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════ -->
@@ -628,6 +657,20 @@ window._fbSaveTour = (tid, tourData) => {
 // Load all tournaments from Firebase once
 window._fbLoadAll = () => {
   const r = ref(database, 'tournaments');
+  return get(r).then(snap => snap.val());
+};
+
+// Registry: save/load/delete a single team
+window._fbSaveRegTeam = (tid, teamData) => {
+  const r = ref(database, 'registry/' + tid);
+  return set(r, teamData);
+};
+window._fbDeleteRegTeam = (tid) => {
+  const r = ref(database, 'registry/' + tid);
+  return set(r, null);
+};
+window._fbLoadRegistry = () => {
+  const r = ref(database, 'registry');
   return get(r).then(snap => snap.val());
 };
 
@@ -2094,10 +2137,139 @@ function mergeTeams(){
   toast(`✅ Merged! "${oldTeam.name}" → "${keepTeam.name}"`);
 }
 
+// ═══════════════════════════════════════════
+// TEAMS REGISTRY
+// ═══════════════════════════════════════════
+let registryTeams = []; // loaded from Firebase + localStorage cache
+let editingRegId = null; // null = new, otherwise = editing existing
+
+function loadRegistry(){
+  const raw = localStorage.getItem('pfl_registry');
+  if(raw){ try{ registryTeams = JSON.parse(raw); }catch(e){ registryTeams=[]; } }
+}
+function saveRegistry(){
+  localStorage.setItem('pfl_registry', JSON.stringify(registryTeams));
+}
+
+function toggleRegistryForm(){
+  editingRegId = null;
+  document.getElementById('regFormTitle').textContent = '➕ New Team';
+  document.getElementById('regName').value = '';
+  document.getElementById('regCoach').value = '';
+  document.getElementById('regBadge').value = '';
+  const wrap = document.getElementById('regFormWrap');
+  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+}
+
+function cancelRegistryForm(){
+  editingRegId = null;
+  document.getElementById('regFormWrap').style.display = 'none';
+}
+
+function editRegistryTeam(tid){
+  const t = registryTeams.find(x => x.id === tid);
+  if(!t) return;
+  editingRegId = tid;
+  document.getElementById('regFormTitle').textContent = '✏️ Edit Team';
+  document.getElementById('regName').value = t.name || '';
+  document.getElementById('regCoach').value = t.coach || '';
+  document.getElementById('regBadge').value = t.badge || '';
+  document.getElementById('regFormWrap').style.display = 'block';
+  document.getElementById('regFormWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function saveRegistryTeam(){
+  const name = document.getElementById('regName').value.trim();
+  const coach = document.getElementById('regCoach').value.trim();
+  const badge = document.getElementById('regBadge').value.trim() || '⚽';
+  if(!name){ toast('Team name is required', true); return; }
+
+  if(editingRegId){
+    // Edit existing
+    const t = registryTeams.find(x => x.id === editingRegId);
+    if(t){ t.name = name; t.coach = coach; t.badge = badge; }
+  } else {
+    // Check duplicate name
+    if(registryTeams.some(t => t.name.toLowerCase() === name.toLowerCase())){
+      toast('A team with that name already exists', true); return;
+    }
+    const newTeam = {
+      id: 'reg_' + Date.now(),
+      name, coach, badge,
+      dateCreated: new Date().toISOString().slice(0,10)
+    };
+    registryTeams.push(newTeam);
+  }
+
+  saveRegistry();
+  // Sync to Firebase
+  if(window._fbSaveRegTeam){
+    const tid = editingRegId || registryTeams[registryTeams.length-1].id;
+    const t = registryTeams.find(x => x.id === tid);
+    if(t) window._fbSaveRegTeam(t.id, t).catch(()=>{});
+  }
+  cancelRegistryForm();
+  renderRegistry();
+  toast(editingRegId ? '✅ Team updated!' : '✅ Team added to registry!');
+  editingRegId = null;
+}
+
+function deleteRegistryTeam(tid){
+  const t = registryTeams.find(x => x.id === tid);
+  if(!t) return;
+  if(!confirm(`Delete "${t.name}" from the registry?\n\nThis only removes them from the registry — it won't affect existing tournament data.`)) return;
+  registryTeams = registryTeams.filter(x => x.id !== tid);
+  saveRegistry();
+  if(window._fbDeleteRegTeam) window._fbDeleteRegTeam(tid).catch(()=>{});
+  renderRegistry();
+  toast(`🗑 ${t.name} removed from registry`);
+}
+
+function renderRegistry(){
+  const el = document.getElementById('regList');
+  if(!registryTeams.length){
+    el.innerHTML = '<div class="empty" style="padding:1.5rem">No teams in registry yet</div>';
+    return;
+  }
+  const sorted = registryTeams.slice().sort((a,b) => a.name.localeCompare(b.name));
+  el.innerHTML = sorted.map(t => `
+    <div class="t-card" style="cursor:default">
+      <div style="display:flex;align-items:center;gap:.8rem;flex:1;min-width:0">
+        <div style="font-size:1.6rem;flex-shrink:0">${t.badge||'⚽'}</div>
+        <div style="min-width:0">
+          <div class="t-card-name">${t.name}</div>
+          <div class="t-card-meta">${t.coach ? '🧢 '+t.coach : 'No coach'} · Added ${t.dateCreated||'—'}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-shrink:0">
+        <button class="del-btn" style="border-color:var(--gold);color:var(--gold)" onclick="editRegistryTeam('${t.id}')">✏️</button>
+        <button class="del-btn" onclick="deleteRegistryTeam('${t.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function initRegistrySync(){
+  if(!window._fbLoadRegistry){ setTimeout(initRegistrySync, 300); return; }
+  window._fbLoadRegistry().then(data => {
+    if(!data) return;
+    const cloudTeams = Object.values(data);
+    let changed = false;
+    cloudTeams.forEach(ct => {
+      const idx = registryTeams.findIndex(x => x.id === ct.id);
+      if(idx === -1){ registryTeams.push(ct); changed = true; }
+      else { registryTeams[idx] = ct; changed = true; }
+    });
+    if(changed){ saveRegistry(); renderRegistry(); }
+  }).catch(()=>{});
+}
+
 // ── INIT ──
 checkSession();
-gdb(); // load from localStorage instantly
+gdb();
+loadRegistry();
 renderList();
+renderRegistry();
 
 // Then pull from Firebase and merge (in case admin switched device)
 function initFirebaseSync(){
@@ -2135,6 +2307,7 @@ function initFirebaseSync(){
   }).catch(()=>setSyncStatus('error'));
 }
 initFirebaseSync();
+initRegistrySync();
 </script>
 </body>
 </html>

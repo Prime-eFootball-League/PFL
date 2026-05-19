@@ -82,8 +82,6 @@ tbody tr:hover td{filter:brightness(1.04)}
 .z-e td{background:rgba(255,51,85,.04)!important}
 .z-q td:first-child{border-left:3px solid var(--green)}
 .z-e td:first-child{border-left:3px solid var(--red)}
-.z-q{border-left:3px solid var(--green)}
-.z-e{border-left:3px solid var(--red)}
 .z-n{border-left:3px solid transparent}
 .z-legend{display:flex;gap:.6rem;flex-wrap:wrap;margin:.8rem 0 .3rem;padding:0 .1rem}
 .zl{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;font-weight:700;letter-spacing:.5px}
@@ -135,13 +133,18 @@ tbody tr:hover td{filter:brightness(1.04)}
 .hdr-live.syncing .sync-spinner{display:block}
 .hdr-live.syncing .live-text::before{content:'SYNCING…'}
 .hdr-live:not(.syncing) .live-text::before{content:'LIVE STANDINGS'}
-/* ── TEAMS TAB ── */
+/* ── REGISTRY TAB ── */
+.reg-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.7rem;display:flex;align-items:center;gap:1rem;transition:border-color .2s,box-shadow .2s;box-shadow:var(--card-shadow)}
+.reg-card:hover{border-color:rgba(212,175,55,.4)}
+.reg-badge{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(212,175,55,.04));border:2px solid rgba(212,175,55,.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.reg-name{font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:2px;color:var(--gold);line-height:1}
+.reg-meta{font-size:.7rem;color:var(--muted);margin-top:.2rem}
 .team-select-wrap{margin-bottom:1.2rem}
 .team-select-wrap label{display:block;font-size:.68rem;font-weight:800;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem}
 .team-dropdown{width:100%;background:var(--card2);border:1.5px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:.92rem;font-weight:700;padding:.65rem .8rem;border-radius:8px;appearance:none;-webkit-appearance:none;cursor:pointer;outline:none;transition:border-color .2s}
 .team-dropdown:focus{border-color:var(--gold)}
 .team-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.team-card-header{background:var(--hdr-grad);border-bottom:2px solid var(--gold);padding:1rem 1.2rem .8rem;display:flex;align-items:center;gap:1rem}
+.team-card-header{background:linear-gradient(135deg,var(--card2),var(--card));border-bottom:2px solid var(--gold);padding:1rem 1.2rem .8rem;display:flex;align-items:center;gap:1rem}
 .team-card-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,.2),rgba(212,175,55,.05));border:2px solid rgba(212,175,55,.5);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
 .team-card-title{flex:1;min-width:0}
 .team-card-name{font-family:'Bebas Neue';font-size:1.5rem;letter-spacing:3px;color:var(--gold);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -176,6 +179,10 @@ tbody tr:hover td{filter:brightness(1.04)}
 </div>
 
 <div class="t-tabs" id="tTabs"></div>
+<div id="regTabBar" style="border-bottom:1px solid var(--border);background:var(--tab-bg);display:flex;transition:var(--transition)">
+  <button class="itab active" id="it-reg" style="color:var(--gold)" onclick="showRegTab()">🏅 Teams</button>
+  <button class="itab" id="it-tourney" onclick="showTourTab()">🏆 Tournaments</button>
+</div>
 
 <div class="itabs" id="iTabs" style="display:none">
   <button class="itab active" id="it-table">📊 Table</button>
@@ -187,6 +194,9 @@ tbody tr:hover td{filter:brightness(1.04)}
   <button class="itab" id="it-rules">📜 Rules</button>
 </div>
 
+<div id="secRegistry" style="padding:.8rem"></div>
+<div id="tourContent">
+
 <div id="secTable"></div>
 <div id="secResults" style="display:none" class="results-list"></div>
 <div id="secFixtures" style="display:none" class="results-list"></div>
@@ -197,6 +207,8 @@ tbody tr:hover td{filter:brightness(1.04)}
 <div id="secGoals" style="display:none" class="results-list"></div>
 <div id="secTeams" style="display:none;padding:.8rem"></div>
 <div id="secRules" style="display:none" class="results-list"></div>
+
+</div><!-- end tourContent -->
 
 <div class="winner-ticker ticker-top" id="winnerTickerTop" style="display:none">
   <div class="winner-ticker-inner scroll-a" id="winnerTickerTextTop"></div>
@@ -281,6 +293,55 @@ var db = {tournaments:[]};
 var activeTid = null;
 var activeSection = 'table';
 
+// ── Registry tab switch ────────────────────────────────────────
+var registryTeams = [];
+
+function showRegTab(){
+  document.getElementById('secRegistry').style.display = 'block';
+  document.getElementById('tourContent').style.display = 'none';
+  document.getElementById('iTabs').style.display = 'none';
+  document.getElementById('it-reg').classList.add('active');
+  document.getElementById('it-tourney').classList.remove('active');
+  renderPublicRegistry();
+}
+
+function showTourTab(){
+  document.getElementById('secRegistry').style.display = 'none';
+  document.getElementById('tourContent').style.display = 'block';
+  document.getElementById('it-reg').classList.remove('active');
+  document.getElementById('it-tourney').classList.add('active');
+  if(activeTid){
+    document.getElementById('iTabs').style.display='flex';
+    render(activeSection);
+  } else {
+    document.getElementById('iTabs').style.display='none';
+    document.getElementById('secTable').innerHTML='<div class="empty"><div class="empty-icon">🏆</div>No tournaments yet</div>';
+  }
+}
+
+function renderPublicRegistry(){
+  var el = document.getElementById('secRegistry');
+  var raw = localStorage.getItem('pfl_registry');
+  var teams = [];
+  try{ if(raw) teams = JSON.parse(raw); }catch(e){}
+  if(!teams.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🏅</div>No teams registered yet</div>';
+    return;
+  }
+  var sorted = teams.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  var h = '<div style="font-family:\'Bebas Neue\';font-size:1.3rem;letter-spacing:3px;color:var(--gold);text-align:center;margin-bottom:1rem">🏅 Registered Teams</div>';
+  sorted.forEach(function(t){
+    h += '<div class="reg-card">'+
+      '<div class="reg-badge">'+(t.badge||'⚽')+'</div>'+
+      '<div style="min-width:0">'+
+      '<div class="reg-name">'+t.name+'</div>'+
+      '<div class="reg-meta">'+(t.coach ? '🧢 '+t.coach : 'No coach listed')+' · Since '+(t.dateCreated||'—')+'</div>'+
+      '</div>'+
+      '</div>';
+  });
+  el.innerHTML = h;
+}
+
 // ── Wire inner tab buttons ─────────────────────────────────────
 ['table','results','fixtures','playoffs','goals','teams','rules'].forEach(function(name){
   document.getElementById('it-'+name).addEventListener('click',function(){ showSec(name); });
@@ -310,33 +371,58 @@ function syncEnd(){
 // ── Firebase fetch ─────────────────────────────────────────────
 function fetchFromFirebase(){
   syncStart();
+  // Fetch tournaments
   fbDb.ref('tournaments').once('value').then(function(snap){
     var data=snap.val();
     syncEnd();
-    if(!data) return;
-    var tours=Object.values(data);
-    var localRaw=localStorage.getItem('pfl_db');
-    var localDb;
-    try{ localDb=localRaw?JSON.parse(localRaw):{tournaments:[]}; }
-    catch(e){ localDb={tournaments:[]}; }
-    tours.forEach(function(t){
-      var idx=localDb.tournaments.findIndex(function(x){ return x.id===t.id; });
-      if(idx===-1) localDb.tournaments.push(t);
-      else localDb.tournaments[idx]=t;
-    });
-    saveToStorage(localDb);
-    db=localDb;
-    renderTournamentTabs();
-    render(activeSection);
-    updateWinnerTicker();
+    if(data){
+      var tours=Object.values(data);
+      var localRaw=localStorage.getItem('pfl_db');
+      var localDb;
+      try{ localDb=localRaw?JSON.parse(localRaw):{tournaments:[]}; }
+      catch(e){ localDb={tournaments:[]}; }
+      tours.forEach(function(t){
+        var idx=localDb.tournaments.findIndex(function(x){ return x.id===t.id; });
+        if(idx===-1) localDb.tournaments.push(t);
+        else localDb.tournaments[idx]=t;
+      });
+      saveToStorage(localDb);
+      db=localDb;
+      renderTournamentTabs();
+      render(activeSection);
+      updateWinnerTicker();
+    }
   }).catch(function(){ syncEnd(); });
+
+  // Fetch registry (separate, non-blocking)
+  fbDb.ref('registry').once('value').then(function(snap){
+    var data=snap.val();
+    if(!data) return;
+    var cloudTeams=Object.values(data);
+    var localRaw=localStorage.getItem('pfl_registry');
+    var local=[];
+    try{ if(localRaw) local=JSON.parse(localRaw); }catch(e){}
+    cloudTeams.forEach(function(ct){
+      var idx=local.findIndex(function(x){ return x.id===ct.id; });
+      if(idx===-1) local.push(ct);
+      else local[idx]=ct;
+    });
+    localStorage.setItem('pfl_registry', JSON.stringify(local));
+    // Re-render registry if it's currently showing
+    if(document.getElementById('secRegistry').style.display!=='none'){
+      renderPublicRegistry();
+    }
+  }).catch(function(){});
 }
 
 // ── Init ───────────────────────────────────────────────────────
 function init(){
+  // Registry shows first by default
+  document.getElementById('secRegistry').style.display = 'block';
+  document.getElementById('tourContent').style.display = 'none';
+  renderPublicRegistry();
   loadFromStorage();
   renderTournamentTabs();
-  render(activeSection);
   updateWinnerTicker();
   fetchFromFirebase();
   setInterval(fetchFromFirebase,30000);
@@ -348,21 +434,25 @@ function renderTournamentTabs(){
   var tours=db.tournaments;
   if(!tours||!tours.length){
     tabs.innerHTML='';
-    document.getElementById('secTable').innerHTML=
-      '<div class="empty"><div class="empty-icon">⏳</div><p>Loading tournament data…<br>Please wait a moment.</p></div>';
     return;
   }
+  // Set activeTid silently if not set yet — don't switch views
+  if(!activeTid) activeTid=tours[0].id;
   tabs.innerHTML=tours.map(function(t){
     return '<button class="t-tab'+(activeTid===t.id?' active':'')+'" data-tid="'+t.id+'">'+t.name+'</button>';
   }).join('');
   tabs.querySelectorAll('.t-tab').forEach(function(btn){
     btn.addEventListener('click',function(){ openTour(btn.getAttribute('data-tid')); });
   });
-  if(!activeTid) openTour(tours[0].id);
 }
 
 function openTour(tid){
   activeTid=tid;
+  // Switch to tournament view
+  document.getElementById('secRegistry').style.display = 'none';
+  document.getElementById('tourContent').style.display = 'block';
+  document.getElementById('it-reg').classList.remove('active');
+  document.getElementById('it-tourney').classList.add('active');
   document.querySelectorAll('.t-tab').forEach(function(el){
     el.classList.toggle('active',el.getAttribute('data-tid')===tid);
   });
@@ -372,6 +462,11 @@ function openTour(tid){
 
 function showSec(name){
   activeSection=name;
+  // Make sure tournament content wrapper is visible
+  document.getElementById('tourContent').style.display='block';
+  document.getElementById('secRegistry').style.display='none';
+  document.getElementById('it-reg').classList.remove('active');
+  document.getElementById('it-tourney').classList.add('active');
   ['table','results','fixtures','playoffs','goals','teams','rules'].forEach(function(s){
     document.getElementById('sec'+cap(s)).style.display=s===name?'block':'none';
     document.getElementById('it-'+s).classList.toggle('active',s===name);
@@ -628,10 +723,12 @@ function renderPlayoffs(){
   }
 
   var mainRounds=tour.bracketRounds.filter(function(r){ return r.matches[0]&&!r.matches[0].is3rd; });
-  if(!mainRounds.length){
-    bc.innerHTML='<div class="empty"><div class="empty-icon">🏆</div>Bracket is not ready yet</div>';return;
-  }
   var thirdRound=tour.bracketRounds.find(function(r){ return r.matches[0]&&r.matches[0].is3rd; });
+
+  if(!mainRounds.length){
+    bc.innerHTML='<div class="empty"><div class="empty-icon">🏆</div>Bracket is being set up</div>';
+    return;
+  }
 
   function etPkBadge(etH,etA,pkH,pkA){
     var s='';
