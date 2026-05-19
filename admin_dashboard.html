@@ -2206,7 +2206,12 @@ function saveRegistryTeam(){
   if(window._fbSaveRegTeam){
     const tid = editingRegId || registryTeams[registryTeams.length-1].id;
     const t = registryTeams.find(x => x.id === tid);
-    if(t) window._fbSaveRegTeam(t.id, t).catch(()=>{});
+    if(t) window._fbSaveRegTeam(t.id, t).then(()=>{
+      setSyncStatus('idle');
+    }).catch((err)=>{
+      console.error('Registry Firebase save failed:', err);
+      toast('⚠️ Saved locally but Firebase sync failed — try again', true);
+    });
   }
   cancelRegistryForm();
   renderRegistry();
@@ -2220,7 +2225,7 @@ function deleteRegistryTeam(tid){
   if(!confirm(`Delete "${t.name}" from the registry?\n\nThis only removes them from the registry — it won't affect existing tournament data.`)) return;
   registryTeams = registryTeams.filter(x => x.id !== tid);
   saveRegistry();
-  if(window._fbDeleteRegTeam) window._fbDeleteRegTeam(tid).catch(()=>{});
+  if(window._fbDeleteRegTeam) window._fbDeleteRegTeam(tid).catch((err)=>{ console.error('Registry delete failed:', err); });
   renderRegistry();
   toast(`🗑 ${t.name} removed from registry`);
 }
@@ -2250,7 +2255,7 @@ function renderRegistry(){
 }
 
 function initRegistrySync(){
-  if(!window._fbLoadRegistry){ setTimeout(initRegistrySync, 300); return; }
+  if(!window._fbLoadRegistry || !window._authReady){ setTimeout(initRegistrySync, 300); return; }
   window._fbLoadRegistry().then(data => {
     if(!data) return;
     const cloudTeams = Object.values(data);
@@ -2273,7 +2278,7 @@ renderRegistry();
 
 // Then pull from Firebase and merge (in case admin switched device)
 function initFirebaseSync(){
-  if(!window._fbLoadAll){
+  if(!window._fbLoadAll || !window._authReady){
     setTimeout(initFirebaseSync, 300);
     return;
   }
