@@ -744,7 +744,7 @@ function renderList(){
     <div class="t-card" onclick="openTour('${t.id}')">
       <div>
         <div class="t-card-name">${t.name}</div>
-        <div class="t-card-meta">${t.season||''} · ${t.format==='league'?'League':'Groups'} · ${t.teams.length} teams · ${t.matches.filter(m=>m.done).length} results</div>
+        <div class="t-card-meta">${t.season||''} · ${t.format==='league'?'League':'Groups'} · ${(t.teams||[]).length} teams · ${(t.matches||[]).filter(m=>m.done).length} results</div>
       </div>
       <span class="t-card-badge">${t.format==='league'?'📋':'🏟️'}</span>
     </div>`).join('');
