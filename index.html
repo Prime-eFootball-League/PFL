@@ -318,7 +318,15 @@ function fetchFromFirebase(){
     tours.forEach(normalizeTour);
     db = {tournaments: tours};
     renderTournamentTabs();
-    render(activeSection);
+    if(activeTid){
+      // Switch to tournament view now that data is ready
+      document.getElementById('secRegistry').style.display = 'none';
+      document.getElementById('tourContent').style.display = 'block';
+      document.getElementById('it-reg').classList.remove('active');
+      document.getElementById('it-tourney').classList.add('active');
+      document.getElementById('iTabs').style.display = 'flex';
+      render(activeSection);
+    }
     updateWinnerTicker();
   }).catch(function(){ syncEnd(); });
 
@@ -337,8 +345,14 @@ function fetchFromFirebase(){
 
 // ── Init ───────────────────────────────────────────────────────
 function init(){
-  activeSection = 'table'; // always start on table tab
-  fetchFromFirebase();
+  activeSection = 'table';
+  // Show teams tab while Firebase loads (avoids empty tournament state)
+  document.getElementById('secRegistry').style.display = 'block';
+  document.getElementById('tourContent').style.display = 'none';
+  document.getElementById('it-reg').classList.add('active');
+  document.getElementById('it-tourney').classList.remove('active');
+  renderPublicRegistry();
+  fetchFromFirebase(); // switches to tournament view once data arrives
   setInterval(fetchFromFirebase,30000);
 }
 
@@ -382,8 +396,10 @@ function showSec(name){
   document.getElementById('it-reg').classList.remove('active');
   document.getElementById('it-tourney').classList.add('active');
   ['table','results','fixtures','playoffs','goals','teams','rules'].forEach(function(s){
-    document.getElementById('sec'+cap(s)).style.display=s===name?'block':'none';
-    document.getElementById('it-'+s).classList.toggle('active',s===name);
+    var sec=document.getElementById('sec'+cap(s));
+    var btn=document.getElementById('it-'+s);
+    if(sec) sec.style.display=s===name?'block':'none';
+    if(btn) btn.classList.toggle('active',s===name);
   });
   render(name);
 }
