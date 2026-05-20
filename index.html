@@ -174,8 +174,8 @@ tbody tr:hover td{filter:brightness(1.04)}
   <button class="itab" id="it-rules">📜 Rules</button>
 </div>
 
-<div id="secRegistry" style="padding:.8rem"></div>
-<div id="tourContent">
+<div id="secRegistry" style="padding:.8rem;display:none"></div>
+<div id="tourContent" style="display:none">
 
 <div id="secTable"></div>
 <div id="secResults" style="display:none" class="results-list"></div>
@@ -319,13 +319,20 @@ function fetchFromFirebase(){
     db = {tournaments: tours};
     renderTournamentTabs();
     if(activeTid){
-      // Switch to tournament view now that data is ready
+      // Show tournament view
       document.getElementById('secRegistry').style.display = 'none';
       document.getElementById('tourContent').style.display = 'block';
       document.getElementById('it-reg').classList.remove('active');
       document.getElementById('it-tourney').classList.add('active');
       document.getElementById('iTabs').style.display = 'flex';
       render(activeSection);
+    } else {
+      // No tournaments yet — show teams tab
+      document.getElementById('secRegistry').style.display = 'block';
+      document.getElementById('tourContent').style.display = 'none';
+      document.getElementById('it-reg').classList.add('active');
+      document.getElementById('it-tourney').classList.remove('active');
+      renderPublicRegistry();
     }
     updateWinnerTicker();
   }).catch(function(){ syncEnd(); });
@@ -346,13 +353,8 @@ function fetchFromFirebase(){
 // ── Init ───────────────────────────────────────────────────────
 function init(){
   activeSection = 'table';
-  // Show teams tab while Firebase loads (avoids empty tournament state)
-  document.getElementById('secRegistry').style.display = 'block';
-  document.getElementById('tourContent').style.display = 'none';
-  document.getElementById('it-reg').classList.add('active');
-  document.getElementById('it-tourney').classList.remove('active');
-  renderPublicRegistry();
-  fetchFromFirebase(); // switches to tournament view once data arrives
+  // Both sections hidden until Firebase loads — syncStart shows the spinner
+  fetchFromFirebase();
   setInterval(fetchFromFirebase,30000);
 }
 
