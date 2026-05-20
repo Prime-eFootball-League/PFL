@@ -150,6 +150,10 @@ tbody tr:hover td{filter:brightness(1.04)}
 .extra-stat-lbl{font-size:.7rem;color:var(--muted)}
 .extra-stat-val{font-family:'Bebas Neue';font-size:1.05rem;color:var(--text)}
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 </head>
 <body>
 
@@ -198,10 +202,6 @@ tbody tr:hover td{filter:brightness(1.04)}
 </div>
 
 <div class="admin-link">⚙️ Admin? <a href="admin.html">Login here</a></div>
-
-<!-- Firebase compat: regular scripts, no ES modules, no import/export -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <script>
 // ── Firebase init ──────────────────────────────────────────────
@@ -1084,7 +1084,11 @@ function updateTrophySplash(tour){
 }
 
 // ── Boot ───────────────────────────────────────────────────────
-init();
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 <footer style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:0.75rem;border-top:1px solid var(--border);margin-top:2rem">
   <p>&copy; 2026 PFL Zone. All rights reserved.</p>
