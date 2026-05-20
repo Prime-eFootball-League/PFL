@@ -2246,9 +2246,31 @@ function saveRegistryTeam(){
   if(!name){ toast('Team name is required', true); return; }
 
   if(editingRegId){
-    // Edit existing
+    // Edit existing registry team
     const t = registryTeams.find(x => x.id === editingRegId);
-    if(t){ t.name = name; t.coach = coach; t.badge = badge; }
+    if(t){
+      const oldName = t.name;
+      t.name = name; t.coach = coach; t.badge = badge;
+      // Propagate name/coach change into all tournaments
+      let tourChanged = false;
+      db.tournaments.forEach(tour => {
+        normalizeTour(tour);
+        tour.teams.forEach(tm => {
+          if(tm.name.toLowerCase() === oldName.toLowerCase()){
+            tm.name = name;
+            tm.coach = coach;
+            tourChanged = true;
+          }
+        });
+      });
+      if(tourChanged){
+        sdb();
+        // Re-sync each affected tournament to Firebase
+        db.tournaments.forEach(tour => {
+          if(window._fbSaveTour) window._fbSaveTour(tour.id, tour).catch(err => console.error('Tour sync failed:', err));
+        });
+      }
+    }
   } else {
     // Check duplicate name
     if(registryTeams.some(t => t.name.toLowerCase() === name.toLowerCase())){
