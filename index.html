@@ -116,8 +116,13 @@ tbody tr:hover td{filter:brightness(1.04)}
 .hdr-live.syncing .live-text::before{content:'SYNCING…'}
 .hdr-live:not(.syncing) .live-text::before{content:'LIVE STANDINGS'}
 /* ── REGISTRY TAB ── */
-.reg-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.7rem;display:flex;align-items:center;gap:1rem;transition:border-color .2s,box-shadow .2s;box-shadow:var(--card-shadow)}
-.reg-card:hover{border-color:rgba(212,175,55,.4)}
+.reg-entry{margin-bottom:.7rem}
+.reg-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;display:flex;align-items:center;gap:1rem;transition:border-color .2s,box-shadow .2s;box-shadow:var(--card-shadow)}
+.reg-card-tap{cursor:pointer;user-select:none}
+.reg-card-tap:hover{border-color:rgba(212,175,55,.4)}
+.reg-card-tap:active{background:var(--card2)}
+.reg-chevron{font-size:.8rem;color:var(--muted);flex-shrink:0;transition:color .2s}
+.reg-expand{background:var(--card2);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:.9rem 1rem}
 .reg-badge{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(212,175,55,.04));border:2px solid rgba(212,175,55,.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
 .reg-name{font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:2px;color:var(--gold);line-height:1}
 .reg-meta{font-size:.7rem;color:var(--muted);margin-top:.2rem}
@@ -257,15 +262,119 @@ function renderPublicRegistry(){
   var sorted = teams.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
   var h = '<div style="font-family:\'Bebas Neue\';font-size:1.3rem;letter-spacing:3px;color:var(--gold);text-align:center;margin-bottom:1rem">🏅 Registered Teams</div>';
   sorted.forEach(function(t){
-    h += '<div class="reg-card">'+
+    var safeId = 'reg_'+t.id.replace(/[^a-zA-Z0-9]/g,'_');
+    h += '<div class="reg-entry">'+
+      '<div class="reg-card reg-card-tap" onclick="toggleRegCard(\''+safeId+'\',\''+t.id+'\')">'+
       '<div class="reg-badge">'+(t.badge||'⚽')+'</div>'+
-      '<div style="min-width:0">'+
+      '<div style="min-width:0;flex:1">'+
       '<div class="reg-name">'+t.name+'</div>'+
       '<div class="reg-meta">'+(t.coach ? '🧢 '+t.coach : 'No coach listed')+' · Since '+(t.dateCreated||'—')+'</div>'+
       '</div>'+
+      '<div class="reg-chevron" id="chv_'+safeId+'">▼</div>'+
+      '</div>'+
+      '<div class="reg-expand" id="'+safeId+'" style="display:none"></div>'+
       '</div>';
   });
   el.innerHTML = h;
+}
+
+function toggleRegCard(safeId, regTeamId){
+  var panel = document.getElementById(safeId);
+  var chv   = document.getElementById('chv_'+safeId);
+  if(!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  // Close all others
+  document.querySelectorAll('.reg-expand').forEach(function(p){ p.style.display='none'; });
+  document.querySelectorAll('.reg-chevron').forEach(function(c){ c.textContent='▼'; c.style.color=''; });
+  if(isOpen){ return; } // was open — just close
+  // Open this one
+  panel.style.display = 'block';
+  if(chv){ chv.textContent='▲'; chv.style.color='var(--gold)'; }
+  // Build stats content
+  panel.innerHTML = buildRegStats(regTeamId);
+}
+
+function buildRegStats(regTeamId){
+  // Find registry team
+  var regTeam = registryTeams.find(function(r){ return r.id===regTeamId; });
+  if(!regTeam) return '<div class="reg-stats-panel"><div class="empty" style="padding:.8rem 0">Team not found</div></div>';
+
+  // Find matching team in active tournament by name
+  var tour = getTour();
+  var tourTeam = null;
+  if(tour && tour.teams && tour.teams.length){
+    tourTeam = tour.teams.find(function(t){
+      return t.name.trim().toLowerCase() === regTeam.name.trim().toLowerCase();
+    });
+  }
+
+  var h = '<div class="reg-stats-panel">';
+
+  if(!tourTeam){
+    h += '<div style="text-align:center;padding:.6rem 0;color:var(--muted);font-size:.8rem">No tournament data yet for this team</div>';
+    h += '</div>';
+    return h;
+  }
+
+  // Position in standings
+  var ranked = sortTeams(tour.teams);
+  var pos = ranked.findIndex(function(x){ return x.id===tourTeam.id; })+1;
+  var posLabel = pos===1?'1st 🥇':pos===2?'2nd 🥈':pos===3?'3rd 🥉':pos+'th';
+
+  // Form: last 5 played matches
+  var played = (tour.matches||[]).filter(function(m){
+    return m.done && (m.homeId===tourTeam.id || m.awayId===tourTeam.id);
+  });
+  var last5 = played.slice(-5);
+  var formSquares = '';
+  if(last5.length){
+    last5.forEach(function(m){
+      var isHome = m.homeId===tourTeam.id;
+      var gf = isHome?m.homeScore:m.awayScore;
+      var ga = isHome?m.awayScore:m.homeScore;
+      var res = gf>ga?'W':gf===ga?'D':'L';
+      formSquares += '<div class="form-sq '+res+'">'+res+'</div>';
+    });
+  } else {
+    formSquares = '<div class="form-sq none">–</div><div class="form-sq none">–</div><div class="form-sq none">–</div><div class="form-sq none">–</div><div class="form-sq none">–</div>';
+  }
+
+  var gd = (tourTeam.goalsFor||0)-(tourTeam.goalsAgainst||0);
+  var gdStr = (gd>=0?'+':'')+gd;
+  var gdColor = gd>0?'var(--green)':gd<0?'var(--red)':'var(--text)';
+  var winRate = (tourTeam.played||0)>0 ? Math.round(((tourTeam.won||0)/(tourTeam.played||1))*100) : 0;
+
+  h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">'+
+    '<div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">'+tour.name+'</div>'+
+    '<div style="font-family:\'Bebas Neue\';font-size:.95rem;color:var(--green);background:rgba(6,255,165,.1);border:1px solid rgba(6,255,165,.25);border-radius:6px;padding:.1rem .5rem">'+posLabel+'</div>'+
+    '</div>';
+
+  // Stats grid
+  h += '<div class="team-stats-grid" style="border-radius:8px;overflow:hidden;margin-bottom:.8rem">'+
+    '<div class="stat-cell"><div class="stat-val">'+  (tourTeam.played||0)+'</div><div class="stat-lbl">Played</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:var(--green)">'+(tourTeam.won||0)+'</div><div class="stat-lbl">Won</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:var(--gold)">'+(tourTeam.drawn||0)+'</div><div class="stat-lbl">Drawn</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:var(--red)">'+(tourTeam.lost||0)+'</div><div class="stat-lbl">Lost</div></div>'+
+    '<div class="stat-cell"><div class="stat-val">'+(tourTeam.goalsFor||0)+'</div><div class="stat-lbl">GF</div></div>'+
+    '<div class="stat-cell"><div class="stat-val">'+(tourTeam.goalsAgainst||0)+'</div><div class="stat-lbl">GA</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:'+gdColor+'">'+gdStr+'</div><div class="stat-lbl">GD</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:var(--gold);font-size:1.5rem">'+(tourTeam.points||0)+'</div><div class="stat-lbl">Pts</div></div>'+
+    '</div>';
+
+  // Form row
+  h += '<div class="form-row" style="margin-bottom:.7rem">'+
+    '<span class="form-label">Form</span>'+
+    '<div class="form-squares">'+formSquares+'</div>'+
+    '</div>';
+
+  // Win rate
+  h += '<div class="extra-stats">'+
+    '<div class="extra-stat-item"><span class="extra-stat-lbl">Win Rate</span><span class="extra-stat-val">'+winRate+'%</span></div>'+
+    '<div class="extra-stat-item"><span class="extra-stat-lbl">Points</span><span class="extra-stat-val" style="color:var(--gold)">'+(tourTeam.points||0)+'</span></div>'+
+    '</div>';
+
+  h += '</div>';
+  return h;
 }
 
 // ── Wire inner tab buttons ─────────────────────────────────────
