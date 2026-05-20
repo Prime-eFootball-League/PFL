@@ -2219,7 +2219,6 @@ function toggleRegistryForm(){
   document.getElementById('regFormTitle').textContent = '➕ New Team';
   document.getElementById('regName').value = '';
   document.getElementById('regCoach').value = '';
-  document.getElementById('regBadge').value = '';
   const wrap = document.getElementById('regFormWrap');
   wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
 }
@@ -2236,7 +2235,6 @@ function editRegistryTeam(tid){
   document.getElementById('regFormTitle').textContent = '✏️ Edit Team';
   document.getElementById('regName').value = t.name || '';
   document.getElementById('regCoach').value = t.coach || '';
-  document.getElementById('regBadge').value = t.badge || '';
   document.getElementById('regFormWrap').style.display = 'block';
   document.getElementById('regFormWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
 }

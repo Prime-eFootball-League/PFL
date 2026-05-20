@@ -311,28 +311,16 @@ function normalizeTour(t){
 
 function fetchFromFirebase(){
   syncStart();
-  // Fetch tournaments
+  // Fetch tournaments — Firebase is source of truth, no localStorage merge
   fbDb.ref('tournaments').once('value').then(function(snap){
     var data=snap.val();
     syncEnd();
-    if(data){
-      var tours=Object.values(data);
-      var localRaw=localStorage.getItem('pfl_db');
-      var localDb;
-      try{ localDb=localRaw?JSON.parse(localRaw):{tournaments:[]}; }
-      catch(e){ localDb={tournaments:[]}; }
-      tours.forEach(function(t){
-        normalizeTour(t);
-        var idx=localDb.tournaments.findIndex(function(x){ return x.id===t.id; });
-        if(idx===-1) localDb.tournaments.push(t);
-        else localDb.tournaments[idx]=t;
-      });
-      saveToStorage(localDb);
-      db=localDb;
-      renderTournamentTabs();
-      render(activeSection);
-      updateWinnerTicker();
-    }
+    var tours = data ? Object.values(data) : [];
+    tours.forEach(normalizeTour);
+    db = {tournaments: tours};
+    renderTournamentTabs();
+    render(activeSection);
+    updateWinnerTicker();
   }).catch(function(){ syncEnd(); });
 
   // Fetch registry (separate, non-blocking)
@@ -341,7 +329,6 @@ function fetchFromFirebase(){
     // Firebase is source of truth — replace local completely
     var cloudTeams = data ? Object.values(data) : [];
     registryTeams = cloudTeams;
-    localStorage.setItem('pfl_registry', JSON.stringify(cloudTeams));
     // Re-render registry if it's currently showing
     if(document.getElementById('secRegistry').style.display!=='none'){
       renderPublicRegistry();
@@ -351,16 +338,10 @@ function fetchFromFirebase(){
 
 // ── Init ───────────────────────────────────────────────────────
 function init(){
-  // Load registry from localStorage cache first (shows instantly before Firebase loads)
-  var raw = localStorage.getItem('pfl_registry');
-  try{ if(raw) registryTeams = JSON.parse(raw); }catch(e){}
-  // Registry shows first by default
+  // Registry shows first by default — Firebase is sole source of truth
   document.getElementById('secRegistry').style.display = 'block';
   document.getElementById('tourContent').style.display = 'none';
-  renderPublicRegistry();
-  loadFromStorage();
-  renderTournamentTabs();
-  updateWinnerTicker();
+  renderPublicRegistry(); // shows empty until Firebase loads
   fetchFromFirebase();
   setInterval(fetchFromFirebase,30000);
 }
