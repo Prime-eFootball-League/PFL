@@ -270,7 +270,8 @@ function renderPublicRegistry(){
 
 // ── Wire inner tab buttons ─────────────────────────────────────
 ['table','results','fixtures','playoffs','goals','teams','rules'].forEach(function(name){
-  document.getElementById('it-'+name).addEventListener('click',function(){ showSec(name); });
+  var btn=document.getElementById('it-'+name);
+  if(btn) btn.addEventListener('click',function(){ showSec(name); });
 });
 
 // ── Storage helpers ────────────────────────────────────────────
