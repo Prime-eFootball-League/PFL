@@ -2242,7 +2242,7 @@ function editRegistryTeam(tid){
 function saveRegistryTeam(){
   const name = document.getElementById('regName').value.trim();
   const coach = document.getElementById('regCoach').value.trim();
-  const badge = document.getElementById('regBadge').value.trim() || '⚽';
+  const badge = '⚽'; // badge field removed, default to soccer ball
   if(!name){ toast('Team name is required', true); return; }
 
   if(editingRegId){
