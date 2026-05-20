@@ -161,8 +161,8 @@ tbody tr:hover td{filter:brightness(1.04)}
 
 <div class="t-tabs" id="tTabs"></div>
 <div id="regTabBar" style="border-bottom:1px solid var(--border);background:var(--tab-bg);display:flex">
-  <button class="itab active" id="it-reg" style="color:var(--gold)" onclick="showRegTab()">🏅 Teams</button>
-  <button class="itab" id="it-tourney" onclick="showTourTab()">🏆 Tournaments</button>
+  <button class="itab active" id="it-tourney" style="color:var(--gold)" onclick="showTourTab()">🏆 Tournaments</button>
+  <button class="itab" id="it-reg" onclick="showRegTab()">🏅 Teams</button>
 </div>
 
 <div class="itabs" id="iTabs" style="display:none">
@@ -171,7 +171,6 @@ tbody tr:hover td{filter:brightness(1.04)}
   <button class="itab" id="it-fixtures">📅 Fixtures</button>
   <button class="itab" id="it-playoffs">🏆 Playoffs</button>
   <button class="itab" id="it-goals">🥅 Goals</button>
-  <button class="itab" id="it-teams">👥 Teams</button>
   <button class="itab" id="it-rules">📜 Rules</button>
 </div>
 
@@ -241,7 +240,7 @@ function showTourTab(){
   document.getElementById('it-tourney').classList.add('active');
   if(activeTid){
     document.getElementById('iTabs').style.display='flex';
-    render(activeSection);
+    showSec('table'); // always land on table when switching to tournaments
   } else {
     document.getElementById('iTabs').style.display='none';
     document.getElementById('secTable').innerHTML='<div class="empty"><div class="empty-icon">🏆</div>No tournaments yet</div>';
@@ -338,10 +337,7 @@ function fetchFromFirebase(){
 
 // ── Init ───────────────────────────────────────────────────────
 function init(){
-  // Registry shows first by default — Firebase is sole source of truth
-  document.getElementById('secRegistry').style.display = 'block';
-  document.getElementById('tourContent').style.display = 'none';
-  renderPublicRegistry(); // shows empty until Firebase loads
+  activeSection = 'table'; // always start on table tab
   fetchFromFirebase();
   setInterval(fetchFromFirebase,30000);
 }
