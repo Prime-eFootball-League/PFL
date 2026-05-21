@@ -209,10 +209,6 @@ tbody tr:hover td{filter:brightness(1.04)}
   <button class="itab" id="it-rules">📜 Rules</button>
 </div>
 
-<div id="secLoading" style="padding:2.5rem 1rem;text-align:center">
-  <div style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:2px;color:var(--gold);margin-bottom:.5rem">⚡ Loading...</div>
-  <div style="font-size:.75rem;color:var(--muted)">Fetching live data from Firebase</div>
-</div>
 <div id="secRegistry" style="padding:.8rem;display:none"></div>
 <div id="secPast" style="padding:.8rem;display:none"></div>
 <div id="tourContent" style="display:none">
@@ -261,7 +257,6 @@ var activeSection = 'table';
 var registryTeams = [];
 
 function showRegTab(){
-  document.getElementById('secLoading').style.display = 'none';
   document.getElementById('secRegistry').style.display = 'block';
   document.getElementById('secPast').style.display = 'none';
   document.getElementById('tourContent').style.display = 'none';
@@ -276,7 +271,6 @@ function showRegTab(){
 var pastViewTid = null; // which finished tournament is being viewed
 
 function showPastTab(){
-  document.getElementById('secLoading').style.display = 'none';
   document.getElementById('secRegistry').style.display = 'none';
   document.getElementById('secPast').style.display = 'block';
   document.getElementById('tourContent').style.display = 'none';
@@ -390,7 +384,6 @@ function showPastSec(name, tid){
 }
 
 function showTourTab(){
-  document.getElementById('secLoading').style.display = 'none';
   document.getElementById('secRegistry').style.display = 'none';
   document.getElementById('secPast').style.display = 'none';
   document.getElementById('tourContent').style.display = 'block';
@@ -577,23 +570,10 @@ function saveToStorage(data){
 function syncStart(){
   var b=document.getElementById('livebadge');
   if(b) b.classList.add('syncing');
-  // Show loading placeholder only if nothing else is visible yet
-  var loading=document.getElementById('secLoading');
-  if(loading){
-    var nothingVisible = (
-      document.getElementById('tourContent').style.display==='none' &&
-      document.getElementById('secRegistry').style.display==='none' &&
-      document.getElementById('secPast').style.display==='none'
-    );
-    loading.style.display = nothingVisible ? 'block' : 'none';
-  }
 }
 function syncEnd(){
   var b=document.getElementById('livebadge');
   if(b) b.classList.remove('syncing');
-  // Always hide loading once data arrives
-  var loading=document.getElementById('secLoading');
-  if(loading) loading.style.display='none';
 }
 
 // ── Firebase fetch ─────────────────────────────────────────────
@@ -612,7 +592,7 @@ function fetchFromFirebase(){
   // Fetch tournaments — Firebase is source of truth, no localStorage merge
   fbDb.ref('tournaments').once('value').then(function(snap){
     var data=snap.val();
-    syncEnd(); // hides secLoading
+    syncEnd();
     var tours = data ? Object.values(data) : [];
     tours.forEach(normalizeTour);
     db = {tournaments: tours};
@@ -620,8 +600,7 @@ function fetchFromFirebase(){
     var activeTours=tours.filter(function(t){ return t.status!=='finished'; });
     if(activeTid && activeTours.length){
       // Show active tournament view
-      document.getElementById('secLoading').style.display = 'none';
-      document.getElementById('secRegistry').style.display = 'none';
+          document.getElementById('secRegistry').style.display = 'none';
       document.getElementById('secPast').style.display = 'none';
       document.getElementById('tourContent').style.display = 'block';
       document.getElementById('it-reg').classList.remove('active');
@@ -634,7 +613,7 @@ function fetchFromFirebase(){
       showPastTab();
     } else {
       // No tournaments yet — show teams tab
-      document.getElementById('secRegistry').style.display = 'block';
+          document.getElementById('secRegistry').style.display = 'block';
       document.getElementById('secPast').style.display = 'none';
       document.getElementById('tourContent').style.display = 'none';
       document.getElementById('it-reg').classList.add('active');
@@ -698,7 +677,6 @@ function renderTournamentTabs(){
 
 function openTour(tid){
   activeTid=tid;
-  // Switch to tournament view
   document.getElementById('secRegistry').style.display = 'none';
   document.getElementById('tourContent').style.display = 'block';
   document.getElementById('it-reg').classList.remove('active');
@@ -712,7 +690,6 @@ function openTour(tid){
 
 function showSec(name){
   activeSection=name;
-  // Make sure tournament content wrapper is visible
   document.getElementById('tourContent').style.display='block';
   document.getElementById('secRegistry').style.display='none';
   document.getElementById('it-reg').classList.remove('active');
