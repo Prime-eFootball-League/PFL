@@ -78,19 +78,11 @@ tbody tr:hover td{filter:brightness(1.04)}
 .r-match{flex:1;min-width:0}
 .r-teams{font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r-meta{font-size:.68rem;color:var(--muted);margin-top:.1rem}
-.fix-item{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:.6rem;overflow:hidden;transition:border-color .2s,box-shadow .2s;box-shadow:var(--card-shadow)}
-.fix-item:hover{border-color:rgba(212,175,55,.35)}
-.fix-header{display:flex;align-items:center;padding:.7rem .9rem;gap:.5rem}
-.fix-team-side{flex:1;min-width:0}
-.fix-team-name{font-family:'Bebas Neue';font-size:1.05rem;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
-.fix-team-coach{font-size:.62rem;color:var(--muted);margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fix-home .fix-team-name{color:var(--text)}
-.fix-away .fix-team-side{text-align:right}
-.fix-away .fix-team-name{color:var(--text)}
-.fix-vs-badge{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--card2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:800;color:var(--muted);letter-spacing:.5px}
-.fix-footer{display:flex;align-items:center;justify-content:space-between;padding:.35rem .9rem .5rem;border-top:1px solid var(--border);background:var(--card2)}
-.fix-date{font-size:.65rem;color:var(--muted)}
-.fix-round-label{font-size:.6rem;color:var(--gold);font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.fix-item{padding:.65rem .5rem;border-bottom:1px solid var(--border);font-size:.83rem;border-radius:6px;transition:background .15s;margin:0 -.5rem}
+.fix-item:hover{background:var(--btn-hover)}
+.fix-item:last-child{border-bottom:none}
+.fix-vs{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fix-sub{font-size:.7rem;color:var(--muted);margin-top:.15rem}
 
 /* ── PLAYOFF ITEMS ── */
 .po-item{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:.9rem;margin-bottom:.7rem;box-shadow:var(--card-shadow)}
@@ -162,23 +154,6 @@ tbody tr:hover td{filter:brightness(1.04)}
 .extra-stat-item{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:.55rem .7rem;display:flex;justify-content:space-between;align-items:center}
 .extra-stat-lbl{font-size:.7rem;color:var(--muted)}
 .extra-stat-val{font-family:'Bebas Neue';font-size:1.05rem;color:var(--text)}
-/* ── PAST SEASONS ── */
-.past-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.8rem;cursor:pointer;transition:border-color .2s,box-shadow .2s;box-shadow:var(--card-shadow)}
-.past-card:hover{border-color:rgba(212,175,55,.4)}
-.past-card:active{background:var(--card2)}
-.past-card-name{font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:2px;color:var(--gold);line-height:1}
-.past-card-meta{font-size:.72rem;color:var(--muted);margin-top:.25rem}
-.past-view-header{display:flex;align-items:center;gap:.7rem;padding:.8rem;background:var(--card);border-bottom:1px solid var(--border);margin-bottom:0}
-.past-back{background:none;border:none;color:var(--gold);font-size:1.2rem;cursor:pointer;flex-shrink:0}
-.past-view-name{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:1.5px;color:var(--gold)}
-/* ── PER-TOURNAMENT TEAM STAT ROWS ── */
-.tour-stat-row{border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;overflow:hidden}
-.tour-stat-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;background:var(--card2);cursor:pointer;user-select:none}
-.tour-stat-header:hover{background:rgba(212,175,55,.06)}
-.tour-stat-name{font-size:.82rem;font-weight:800;color:var(--text)}
-.tour-stat-pts{font-family:'Bebas Neue';font-size:.95rem;color:var(--gold);letter-spacing:1px}
-.tour-stat-chv{font-size:.75rem;color:var(--muted);transition:color .2s}
-.tour-stat-body{display:none;padding:.7rem .8rem;background:var(--card)}
 </style>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -197,7 +172,6 @@ tbody tr:hover td{filter:brightness(1.04)}
 <div id="regTabBar" style="border-bottom:1px solid var(--border);background:var(--tab-bg);display:flex">
   <button class="itab active" id="it-tourney" style="color:var(--gold)" onclick="showTourTab()">🏆 Tournaments</button>
   <button class="itab" id="it-reg" onclick="showRegTab()">🏅 Teams</button>
-  <button class="itab" id="it-past" onclick="showPastTab()">🏁 Past Seasons</button>
 </div>
 
 <div class="itabs" id="iTabs" style="display:none">
@@ -210,7 +184,6 @@ tbody tr:hover td{filter:brightness(1.04)}
 </div>
 
 <div id="secRegistry" style="padding:.8rem;display:none"></div>
-<div id="secPast" style="padding:.8rem;display:none"></div>
 <div id="tourContent" style="display:none">
 
 <div id="secTable"></div>
@@ -258,137 +231,17 @@ var registryTeams = [];
 
 function showRegTab(){
   document.getElementById('secRegistry').style.display = 'block';
-  document.getElementById('secPast').style.display = 'none';
   document.getElementById('tourContent').style.display = 'none';
   document.getElementById('iTabs').style.display = 'none';
   document.getElementById('it-reg').classList.add('active');
-  document.getElementById('it-past').classList.remove('active');
   document.getElementById('it-tourney').classList.remove('active');
   renderPublicRegistry();
 }
 
-// ── Past Seasons tab ───────────────────────────────────────────
-var pastViewTid = null; // which finished tournament is being viewed
-
-function showPastTab(){
-  document.getElementById('secRegistry').style.display = 'none';
-  document.getElementById('secPast').style.display = 'block';
-  document.getElementById('tourContent').style.display = 'none';
-  document.getElementById('iTabs').style.display = 'none';
-  document.getElementById('it-reg').classList.remove('active');
-  document.getElementById('it-past').classList.add('active');
-  document.getElementById('it-tourney').classList.remove('active');
-  pastViewTid = null;
-  renderPastList();
-}
-
-function renderPastList(){
-  var el = document.getElementById('secPast');
-  var finished = db.tournaments.filter(function(t){ return t.status === 'finished'; });
-  var h = '<div style="font-family:\'Bebas Neue\';font-size:1.3rem;letter-spacing:3px;color:var(--gold);text-align:center;margin-bottom:1rem">🏁 Past Seasons</div>';
-  if(!finished.length){
-    h += '<div class="empty"><div class="empty-icon">🏁</div>No finished seasons yet</div>';
-    el.innerHTML = h;
-    return;
-  }
-  finished.forEach(function(t){
-    var doneCount = (t.matches||[]).filter(function(m){ return m.done; }).length;
-    var teamCount = (t.teams||[]).length;
-    // Find winner from bracket if exists
-    var winner = '';
-    if(t.bracketRounds && t.bracketRounds.length){
-      var finals = t.bracketRounds.filter(function(r){ return r.matches && r.matches[0] && !r.matches[0].is3rd; });
-      var finalRound = finals[finals.length-1];
-      if(finalRound && finalRound.matches[0] && finalRound.matches[0].winner) winner = finalRound.matches[0].winner.name;
-    }
-    h += '<div class="past-card" onclick="openPastTour(\''+t.id+'\')">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between">' +
-      '<div>' +
-      '<div class="past-card-name">🏆 '+t.name+'</div>' +
-      '<div class="past-card-meta">'+(t.season||'')+(t.season?' · ':'')+teamCount+' teams · '+doneCount+' matches played</div>' +
-      (winner ? '<div style="font-size:.75rem;color:var(--gold);margin-top:.3rem;font-weight:700">👑 Winner: '+winner+'</div>' : '') +
-      '</div>' +
-      '<div style="font-family:\'Bebas Neue\';font-size:1rem;color:var(--muted);letter-spacing:1px">VIEW →</div>' +
-      '</div>' +
-      '</div>';
-  });
-  el.innerHTML = h;
-}
-
-function openPastTour(tid){
-  pastViewTid = tid;
-  var tour = db.tournaments.find(function(t){ return t.id === tid; });
-  if(!tour) return;
-  var el = document.getElementById('secPast');
-  // Build a self-contained past tournament view with its own sub-tabs
-  var h = '<div class="past-view-header">' +
-    '<button class="past-back" onclick="showPastTab()">← Back</button>' +
-    '<div><div class="past-view-name">'+tour.name+'</div>' +
-    '<div style="font-size:.65rem;color:var(--muted);letter-spacing:1px">'+(tour.season||'')+(tour.season?' · ':'')+'FINISHED SEASON</div></div>' +
-    '</div>' +
-    '<div style="display:flex;overflow-x:auto;background:var(--tab-bg);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch">' +
-    '<button class="itab active" id="pt-table" onclick="showPastSec(\'table\',\''+tid+'\')">📊 Table</button>' +
-    '<button class="itab" id="pt-results" onclick="showPastSec(\'results\',\''+tid+'\')">✅ Results</button>' +
-    '<button class="itab" id="pt-fixtures" onclick="showPastSec(\'fixtures\',\''+tid+'\')">📅 Fixtures</button>' +
-    '<button class="itab" id="pt-playoffs" onclick="showPastSec(\'playoffs\',\''+tid+'\')">🏆 Playoffs</button>' +
-    '<button class="itab" id="pt-goals" onclick="showPastSec(\'goals\',\''+tid+'\')">🥅 Goals</button>' +
-    '<button class="itab" id="pt-rules" onclick="showPastSec(\'rules\',\''+tid+'\')">📜 Rules</button>' +
-    '</div>' +
-    '<div id="pastSecContent" style="padding:.1rem 0"></div>';
-  el.innerHTML = h;
-  // Render table by default
-  showPastSec('table', tid);
-}
-
-function showPastSec(name, tid){
-  // Update tab active states
-  ['table','results','fixtures','playoffs','goals','rules'].forEach(function(s){
-    var btn = document.getElementById('pt-'+s);
-    if(btn) btn.classList.toggle('active', s === name);
-  });
-  var tour = db.tournaments.find(function(t){ return t.id === tid; });
-  if(!tour) return;
-  var el = document.getElementById('pastSecContent');
-  if(!el) return;
-
-  // Strategy: temporarily point activeTid at this past tour,
-  // hijack the real sec* div, call the render fn, capture innerHTML,
-  // then restore activeTid and the div. No DOM leakage.
-  var prevTid = activeTid;
-  activeTid = tid;
-
-  var secIds = {
-    'table':'secTable', 'results':'secResults', 'fixtures':'secFixtures',
-    'playoffs':'secPlayoffs', 'goals':'secGoals', 'rules':'secRules'
-  };
-  var secId = secIds[name];
-  var realSec = document.getElementById(secId);
-  var prevHTML = realSec ? realSec.innerHTML : '';
-
-  // Run the real render function (writes into realSec)
-  if(name==='table') renderTable();
-  else if(name==='results') renderResults();
-  else if(name==='fixtures') renderFixtures();
-  else if(name==='playoffs') renderPlayoffs();
-  else if(name==='goals') renderGoalsRanking();
-  else if(name==='rules') renderRules();
-
-  // Grab the rendered HTML and put it in pastSecContent
-  var rendered = realSec ? realSec.innerHTML : '';
-  var wrapClass = name==='table' ? '' : 'results-list';
-  el.innerHTML = wrapClass ? '<div class="'+wrapClass+'">'+rendered+'</div>' : rendered;
-
-  // Restore original sec div and activeTid
-  if(realSec) realSec.innerHTML = prevHTML;
-  activeTid = prevTid;
-}
-
 function showTourTab(){
   document.getElementById('secRegistry').style.display = 'none';
-  document.getElementById('secPast').style.display = 'none';
   document.getElementById('tourContent').style.display = 'block';
   document.getElementById('it-reg').classList.remove('active');
-  document.getElementById('it-past').classList.remove('active');
   document.getElementById('it-tourney').classList.add('active');
   if(activeTid){
     document.getElementById('iTabs').style.display='flex';
@@ -442,108 +295,86 @@ function toggleRegCard(safeId, regTeamId){
 }
 
 function buildRegStats(regTeamId){
+  // Find registry team
   var regTeam = registryTeams.find(function(r){ return r.id===regTeamId; });
   if(!regTeam) return '<div class="reg-stats-panel"><div class="empty" style="padding:.8rem 0">Team not found</div></div>';
 
-  // Find ALL tournaments this team appears in (by name match)
-  var teamName = regTeam.name.trim().toLowerCase();
-  var appearances = db.tournaments.filter(function(t){
-    return (t.teams||[]).some(function(tm){ return tm.name.trim().toLowerCase()===teamName; });
-  });
+  // Find matching team in active tournament by name
+  var tour = getTour();
+  var tourTeam = null;
+  if(tour && tour.teams && tour.teams.length){
+    tourTeam = tour.teams.find(function(t){
+      return t.name.trim().toLowerCase() === regTeam.name.trim().toLowerCase();
+    });
+  }
 
   var h = '<div class="reg-stats-panel">';
 
-  if(!appearances.length){
-    h += '<div style="text-align:center;padding:.6rem 0;color:var(--muted);font-size:.8rem">No tournament data yet for this team</div></div>';
+  if(!tourTeam){
+    h += '<div style="text-align:center;padding:.6rem 0;color:var(--muted);font-size:.8rem">No tournament data yet for this team</div>';
+    h += '</div>';
     return h;
   }
 
-  // Badge: how many tournaments
-  h += '<div style="font-size:.7rem;color:var(--muted);margin-bottom:.7rem;letter-spacing:.5px">Appeared in <strong style="color:var(--gold)">'+appearances.length+'</strong> tournament'+(appearances.length>1?'s':'')+'</div>';
+  // Position in standings
+  var ranked = sortTeams(tour.teams);
+  var pos = ranked.findIndex(function(x){ return x.id===tourTeam.id; })+1;
+  var posLabel = pos===1?'1st 🥇':pos===2?'2nd 🥈':pos===3?'3rd 🥉':pos+'th';
 
-  appearances.forEach(function(tour, idx){
-    var tourTeam = (tour.teams||[]).find(function(tm){ return tm.name.trim().toLowerCase()===teamName; });
-    if(!tourTeam) return;
-
-    var isFinished = tour.status === 'finished';
-    var rowId = 'tsr_'+regTeamId.replace(/[^a-zA-Z0-9]/g,'_')+'_'+idx;
-
-    // Position
-    var ranked = sortTeams(tour.teams);
-    var pos = ranked.findIndex(function(x){ return x.id===tourTeam.id; })+1;
-    var posLabel = pos===1?'1st 🥇':pos===2?'2nd 🥈':pos===3?'3rd 🥉':pos+'th';
-
-    // Form: last 5
-    var playedM = (tour.matches||[]).filter(function(m){
-      return m.done && (m.homeId===tourTeam.id || m.awayId===tourTeam.id);
-    });
-    var last5 = playedM.slice(-5);
-    var formSq = '';
-    if(last5.length){
-      last5.forEach(function(m){
-        var isHome=m.homeId===tourTeam.id;
-        var gf=isHome?m.homeScore:m.awayScore;
-        var ga=isHome?m.awayScore:m.homeScore;
-        var res=gf>ga?'W':gf===ga?'D':'L';
-        formSq+='<div class="form-sq '+res+'">'+res+'</div>';
-      });
-    } else {
-      formSq='<div class="form-sq none">–</div>'.repeat(5);
-    }
-
-    var gd=(tourTeam.goalsFor||0)-(tourTeam.goalsAgainst||0);
-    var gdStr=(gd>=0?'+':'')+gd;
-    var gdColor=gd>0?'var(--green)':gd<0?'var(--red)':'var(--text)';
-    var winRate=(tourTeam.played||0)>0?Math.round(((tourTeam.won||0)/(tourTeam.played||1))*100):0;
-
-    h += '<div class="tour-stat-row">'+
-      '<div class="tour-stat-header" onclick="toggleTourStatRow(''+rowId+'')">'+
-      '<div>'+
-      '<div class="tour-stat-name">'+tour.name+(isFinished?' <span style="font-size:.6rem;color:var(--gold);background:rgba(212,175,55,.1);padding:.1rem .3rem;border-radius:3px;letter-spacing:.5px">FINISHED</span>':'')+'</div>'+
-      '<div style="font-size:.65rem;color:var(--muted)">'+(tour.season||'')+'</div>'+
-      '</div>'+
-      '<div style="display:flex;align-items:center;gap:.6rem">'+
-      '<span class="tour-stat-pts">'+posLabel+' · '+(tourTeam.points||0)+'pts</span>'+
-      '<span class="tour-stat-chv" id="chv_'+rowId+'">▼</span>'+
-      '</div>'+
-      '</div>'+
-      '<div class="tour-stat-body" id="'+rowId+'">'+
-      // Stats grid
-      '<div class="team-stats-grid" style="border-radius:6px;overflow:hidden;margin-bottom:.7rem">'+
-      '<div class="stat-cell"><div class="stat-val">'+(tourTeam.played||0)+'</div><div class="stat-lbl">Played</div></div>'+
-      '<div class="stat-cell"><div class="stat-val" style="color:var(--green)">'+(tourTeam.won||0)+'</div><div class="stat-lbl">Won</div></div>'+
-      '<div class="stat-cell"><div class="stat-val" style="color:var(--gold)">'+(tourTeam.drawn||0)+'</div><div class="stat-lbl">Drawn</div></div>'+
-      '<div class="stat-cell"><div class="stat-val" style="color:var(--red)">'+(tourTeam.lost||0)+'</div><div class="stat-lbl">Lost</div></div>'+
-      '<div class="stat-cell"><div class="stat-val">'+(tourTeam.goalsFor||0)+'</div><div class="stat-lbl">GF</div></div>'+
-      '<div class="stat-cell"><div class="stat-val">'+(tourTeam.goalsAgainst||0)+'</div><div class="stat-lbl">GA</div></div>'+
-      '<div class="stat-cell"><div class="stat-val" style="color:'+gdColor+'">'+gdStr+'</div><div class="stat-lbl">GD</div></div>'+
-      '<div class="stat-cell"><div class="stat-val" style="color:var(--gold);font-size:1.5rem">'+(tourTeam.points||0)+'</div><div class="stat-lbl">Pts</div></div>'+
-      '</div>'+
-      // Form
-      '<div class="form-row" style="margin-bottom:.6rem">'+
-      '<span class="form-label">Form</span>'+
-      '<div class="form-squares">'+formSq+'</div>'+
-      '</div>'+
-      // Win rate
-      '<div class="extra-stats">'+
-      '<div class="extra-stat-item"><span class="extra-stat-lbl">Win Rate</span><span class="extra-stat-val">'+winRate+'%</span></div>'+
-      '<div class="extra-stat-item"><span class="extra-stat-lbl">Points</span><span class="extra-stat-val" style="color:var(--gold)">'+(tourTeam.points||0)+'</span></div>'+
-      '</div>'+
-      '</div>'+
-      '</div>';
+  // Form: last 5 played matches
+  var played = (tour.matches||[]).filter(function(m){
+    return m.done && (m.homeId===tourTeam.id || m.awayId===tourTeam.id);
   });
+  var last5 = played.slice(-5);
+  var formSquares = '';
+  if(last5.length){
+    last5.forEach(function(m){
+      var isHome = m.homeId===tourTeam.id;
+      var gf = isHome?m.homeScore:m.awayScore;
+      var ga = isHome?m.awayScore:m.homeScore;
+      var res = gf>ga?'W':gf===ga?'D':'L';
+      formSquares += '<div class="form-sq '+res+'">'+res+'</div>';
+    });
+  } else {
+    formSquares = '<div class="form-sq none">–</div><div class="form-sq none">–</div><div class="form-sq none">–</div><div class="form-sq none">–</div><div class="form-sq none">–</div>';
+  }
+
+  var gd = (tourTeam.goalsFor||0)-(tourTeam.goalsAgainst||0);
+  var gdStr = (gd>=0?'+':'')+gd;
+  var gdColor = gd>0?'var(--green)':gd<0?'var(--red)':'var(--text)';
+  var winRate = (tourTeam.played||0)>0 ? Math.round(((tourTeam.won||0)/(tourTeam.played||1))*100) : 0;
+
+  h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">'+
+    '<div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">'+tour.name+'</div>'+
+    '<div style="font-family:\'Bebas Neue\';font-size:.95rem;color:var(--green);background:rgba(6,255,165,.1);border:1px solid rgba(6,255,165,.25);border-radius:6px;padding:.1rem .5rem">'+posLabel+'</div>'+
+    '</div>';
+
+  // Stats grid
+  h += '<div class="team-stats-grid" style="border-radius:8px;overflow:hidden;margin-bottom:.8rem">'+
+    '<div class="stat-cell"><div class="stat-val">'+  (tourTeam.played||0)+'</div><div class="stat-lbl">Played</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:var(--green)">'+(tourTeam.won||0)+'</div><div class="stat-lbl">Won</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:var(--gold)">'+(tourTeam.drawn||0)+'</div><div class="stat-lbl">Drawn</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:var(--red)">'+(tourTeam.lost||0)+'</div><div class="stat-lbl">Lost</div></div>'+
+    '<div class="stat-cell"><div class="stat-val">'+(tourTeam.goalsFor||0)+'</div><div class="stat-lbl">GF</div></div>'+
+    '<div class="stat-cell"><div class="stat-val">'+(tourTeam.goalsAgainst||0)+'</div><div class="stat-lbl">GA</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:'+gdColor+'">'+gdStr+'</div><div class="stat-lbl">GD</div></div>'+
+    '<div class="stat-cell"><div class="stat-val" style="color:var(--gold);font-size:1.5rem">'+(tourTeam.points||0)+'</div><div class="stat-lbl">Pts</div></div>'+
+    '</div>';
+
+  // Form row
+  h += '<div class="form-row" style="margin-bottom:.7rem">'+
+    '<span class="form-label">Form</span>'+
+    '<div class="form-squares">'+formSquares+'</div>'+
+    '</div>';
+
+  // Win rate
+  h += '<div class="extra-stats">'+
+    '<div class="extra-stat-item"><span class="extra-stat-lbl">Win Rate</span><span class="extra-stat-val">'+winRate+'%</span></div>'+
+    '<div class="extra-stat-item"><span class="extra-stat-lbl">Points</span><span class="extra-stat-val" style="color:var(--gold)">'+(tourTeam.points||0)+'</span></div>'+
+    '</div>';
 
   h += '</div>';
   return h;
-}
-
-function toggleTourStatRow(rowId){
-  var body = document.getElementById(rowId);
-  var chv  = document.getElementById('chv_'+rowId);
-  if(!body) return;
-  var isOpen = body.style.display === 'block';
-  body.style.display = isOpen ? 'none' : 'block';
-  if(chv){ chv.textContent = isOpen ? '▼' : '▲'; chv.style.color = isOpen ? '' : 'var(--gold)'; }
 }
 
 // ── Wire inner tab buttons ─────────────────────────────────────
@@ -589,6 +420,7 @@ function normalizeTour(t){
 
 function fetchFromFirebase(){
   syncStart();
+  // Fetch tournaments — Firebase is source of truth, no localStorage merge
   fbDb.ref('tournaments').once('value').then(function(snap){
     var data=snap.val();
     syncEnd();
@@ -596,38 +428,32 @@ function fetchFromFirebase(){
     tours.forEach(normalizeTour);
     db = {tournaments: tours};
     renderTournamentTabs();
-    // activeTid is now set by renderTournamentTabs if active tours exist
-    var allFinished = tours.length>0 && tours.every(function(t){ return t.status==='finished'; });
-    if(allFinished){
-      // Every tournament is finished — show Past Seasons
-      showPastTab();
-    } else if(activeTid){
-      // Normal case — show active tournament
+    if(activeTid){
+      // Show tournament view
       document.getElementById('secRegistry').style.display = 'none';
-      document.getElementById('secPast').style.display = 'none';
       document.getElementById('tourContent').style.display = 'block';
       document.getElementById('it-reg').classList.remove('active');
-      document.getElementById('it-past').classList.remove('active');
       document.getElementById('it-tourney').classList.add('active');
       document.getElementById('iTabs').style.display = 'flex';
       render(activeSection);
     } else {
-      // No tournaments at all — show teams tab
+      // No tournaments yet — show teams tab
       document.getElementById('secRegistry').style.display = 'block';
-      document.getElementById('secPast').style.display = 'none';
       document.getElementById('tourContent').style.display = 'none';
       document.getElementById('it-reg').classList.add('active');
-      document.getElementById('it-past').classList.remove('active');
       document.getElementById('it-tourney').classList.remove('active');
       renderPublicRegistry();
     }
     updateWinnerTicker();
   }).catch(function(){ syncEnd(); });
 
+  // Fetch registry (separate, non-blocking)
   fbDb.ref('registry').once('value').then(function(snap){
     var data=snap.val();
+    // Firebase is source of truth — replace local completely
     var cloudTeams = data ? Object.values(data) : [];
     registryTeams = cloudTeams;
+    // Re-render registry if it's currently showing
     if(document.getElementById('secRegistry').style.display!=='none'){
       renderPublicRegistry();
     }
@@ -645,25 +471,13 @@ function init(){
 // ── Tournament tabs ────────────────────────────────────────────
 function renderTournamentTabs(){
   var tabs=document.getElementById('tTabs');
-  var allTours=db.tournaments;
-  // Only show ACTIVE tournaments in the top pill bar
-  var tours=allTours.filter(function(t){ return t.status!=='finished'; });
+  var tours=db.tournaments;
   if(!tours||!tours.length){
     tabs.innerHTML='';
-    // If activeTid was a finished tour, clear it
-    if(activeTid){
-      var active=allTours.find(function(t){ return t.id===activeTid; });
-      if(!active||active.status==='finished') activeTid=null;
-    }
     return;
   }
-  // Set activeTid to first active tour if not set or was a finished one
-  if(!activeTid){
-    activeTid=tours[0].id;
-  } else {
-    var cur=allTours.find(function(t){ return t.id===activeTid; });
-    if(!cur||cur.status==='finished') activeTid=tours[0].id;
-  }
+  // Set activeTid silently if not set yet — don't switch views
+  if(!activeTid) activeTid=tours[0].id;
   tabs.innerHTML=tours.map(function(t){
     return '<button class="t-tab'+(activeTid===t.id?' active':'')+'" data-tid="'+t.id+'">'+t.name+'</button>';
   }).join('');
@@ -674,6 +488,7 @@ function renderTournamentTabs(){
 
 function openTour(tid){
   activeTid=tid;
+  // Switch to tournament view
   document.getElementById('secRegistry').style.display = 'none';
   document.getElementById('tourContent').style.display = 'block';
   document.getElementById('it-reg').classList.remove('active');
@@ -687,6 +502,7 @@ function openTour(tid){
 
 function showSec(name){
   activeSection=name;
+  // Make sure tournament content wrapper is visible
   document.getElementById('tourContent').style.display='block';
   document.getElementById('secRegistry').style.display='none';
   document.getElementById('it-reg').classList.remove('active');
@@ -850,39 +666,6 @@ function toggleRound(uid){
 }
 
 // ── FIXTURES ───────────────────────────────────────────────────
-function getCoach(teamName){
-  // Look up coach from registry by team name match
-  var reg = registryTeams.find(function(r){
-    return r.name.trim().toLowerCase() === (teamName||'').trim().toLowerCase();
-  });
-  return reg && reg.coach ? reg.coach : null;
-}
-
-function buildFixCard(homeName, awayName, footerLeft, footerRight){
-  var homeCoach = getCoach(homeName);
-  var awayCoach = getCoach(awayName);
-  return '<div class="fix-item">'+
-    '<div class="fix-header">'+
-    // Home side
-    '<div class="fix-team-side fix-home">'+
-    '<div class="fix-team-name">'+homeName+'</div>'+
-    (homeCoach ? '<div class="fix-team-coach">🧢 '+homeCoach+'</div>' : '<div class="fix-team-coach" style="opacity:0">–</div>')+
-    '</div>'+
-    // VS badge
-    '<div class="fix-vs-badge">VS</div>'+
-    // Away side
-    '<div class="fix-team-side fix-away">'+
-    '<div class="fix-team-name">'+awayName+'</div>'+
-    (awayCoach ? '<div class="fix-team-coach">🧢 '+awayCoach+'</div>' : '<div class="fix-team-coach" style="opacity:0">–</div>')+
-    '</div>'+
-    '</div>'+
-    '<div class="fix-footer">'+
-    '<span class="fix-date">'+footerLeft+'</span>'+
-    '<span class="fix-round-label">'+footerRight+'</span>'+
-    '</div>'+
-    '</div>';
-}
-
 function renderFixtures(){
   var tour=getTour();
   var el=document.getElementById('secFixtures');
@@ -926,7 +709,10 @@ function renderFixtures(){
         '<div style="font-family:\'Bebas Neue\';font-size:.95rem;letter-spacing:2px;color:var(--gold);padding:.2rem .8rem;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:20px;white-space:nowrap">📅 '+r+'</div>'+
         '<div style="flex:1;height:1px;background:var(--border)"></div></div>';
       pending.filter(function(m){ return m.round===r; }).forEach(function(m){
-        h+=buildFixCard(m.homeName, m.awayName, m.date||'📅 Date TBC', r);
+        h+='<div class="fix-item">'+
+          '<div class="fix-vs">'+m.homeName+' <span style="color:var(--muted);font-weight:400">vs</span> '+m.awayName+'</div>'+
+          '<div class="fix-sub">'+(m.date||'Date TBC')+'</div>'+
+          '</div>';
       });
       h+='</div>';
     });
@@ -940,7 +726,10 @@ function renderFixtures(){
       '<div style="font-family:\'Bebas Neue\';font-size:.95rem;letter-spacing:2px;color:var(--gold);padding:.2rem .8rem;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:20px;white-space:nowrap">🏆 Playoffs</div>'+
       '<div style="flex:1;height:1px;background:var(--border)"></div></div>';
     bracketPending.forEach(function(m){
-      h+=buildFixCard(m.homeName, m.awayName, m.date||'📅 Date TBC', m.round+(m.legs===2?' · H&A':' · Single'));
+      h+='<div class="fix-item">'+
+        '<div class="fix-vs">'+m.homeName+' <span style="color:var(--muted);font-weight:400">vs</span> '+m.awayName+'</div>'+
+        '<div class="fix-sub">'+m.round+(m.legs===2?' · Home & Away':' · Single Match')+(m.date?' · '+m.date:'')+'</div>'+
+        '</div>';
     });
     h+='</div>';
   }
