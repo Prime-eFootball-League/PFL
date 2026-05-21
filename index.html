@@ -589,7 +589,6 @@ function normalizeTour(t){
 
 function fetchFromFirebase(){
   syncStart();
-  // Fetch tournaments — Firebase is source of truth, no localStorage merge
   fbDb.ref('tournaments').once('value').then(function(snap){
     var data=snap.val();
     syncEnd();
@@ -597,10 +596,14 @@ function fetchFromFirebase(){
     tours.forEach(normalizeTour);
     db = {tournaments: tours};
     renderTournamentTabs();
-    var activeTours=tours.filter(function(t){ return t.status!=='finished'; });
-    if(activeTid && activeTours.length){
-      // Show active tournament view
-          document.getElementById('secRegistry').style.display = 'none';
+    // activeTid is now set by renderTournamentTabs if active tours exist
+    var allFinished = tours.length>0 && tours.every(function(t){ return t.status==='finished'; });
+    if(allFinished){
+      // Every tournament is finished — show Past Seasons
+      showPastTab();
+    } else if(activeTid){
+      // Normal case — show active tournament
+      document.getElementById('secRegistry').style.display = 'none';
       document.getElementById('secPast').style.display = 'none';
       document.getElementById('tourContent').style.display = 'block';
       document.getElementById('it-reg').classList.remove('active');
@@ -608,12 +611,9 @@ function fetchFromFirebase(){
       document.getElementById('it-tourney').classList.add('active');
       document.getElementById('iTabs').style.display = 'flex';
       render(activeSection);
-    } else if(activeTours.length===0 && tours.length>0){
-      // All tournaments are finished — show Past Seasons tab
-      showPastTab();
     } else {
-      // No tournaments yet — show teams tab
-          document.getElementById('secRegistry').style.display = 'block';
+      // No tournaments at all — show teams tab
+      document.getElementById('secRegistry').style.display = 'block';
       document.getElementById('secPast').style.display = 'none';
       document.getElementById('tourContent').style.display = 'none';
       document.getElementById('it-reg').classList.add('active');
@@ -624,13 +624,10 @@ function fetchFromFirebase(){
     updateWinnerTicker();
   }).catch(function(){ syncEnd(); });
 
-  // Fetch registry (separate, non-blocking)
   fbDb.ref('registry').once('value').then(function(snap){
     var data=snap.val();
-    // Firebase is source of truth — replace local completely
     var cloudTeams = data ? Object.values(data) : [];
     registryTeams = cloudTeams;
-    // Re-render registry if it's currently showing
     if(document.getElementById('secRegistry').style.display!=='none'){
       renderPublicRegistry();
     }
