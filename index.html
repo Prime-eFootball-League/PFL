@@ -71,22 +71,30 @@ tbody tr:hover td{filter:brightness(1.04)}
 
 /* ── RESULTS / FIXTURES ── */
 .results-list{padding:.8rem}
-.r-item{display:flex;align-items:center;gap:.6rem;padding:.65rem .5rem;border-bottom:1px solid var(--border);border-radius:6px;transition:background .15s;margin:0 -.5rem}
-.r-item:hover{background:var(--btn-hover)}
-.r-item:last-child{border-bottom:none}
-.r-score{font-family:'Bebas Neue';font-size:1.05rem;color:var(--gold);letter-spacing:2px;flex-shrink:0;min-width:52px;text-align:center}
-.r-match{flex:1;min-width:0}
-.r-teams{font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.r-meta{font-size:.68rem;color:var(--muted);margin-top:.1rem}
+.r-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.7rem .9rem;margin-bottom:.5rem;transition:border-color .2s}
+.r-item:hover{border-color:rgba(212,175,55,.35)}
+.r-item:last-child{margin-bottom:0}
+.r-matchup{display:flex;align-items:center;gap:.5rem;margin-bottom:.0rem}
+.r-home-side{flex:1;min-width:0}
+.r-away-side{flex:1;min-width:0;text-align:right}
+.r-tname{font-weight:800;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-tcoach{font-size:.65rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-away-side .r-tname{text-align:right}
+.r-away-side .r-tcoach{text-align:right}
+.r-score-badge{flex-shrink:0;text-align:center}
+.r-score{font-family:'Bebas Neue';font-size:1.3rem;color:var(--gold);letter-spacing:3px;line-height:1}
+.r-meta{font-size:.62rem;color:var(--muted);text-align:center;margin-top:.15rem}
 .fix-item{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:.6rem;overflow:hidden;transition:border-color .2s,box-shadow .2s;box-shadow:var(--card-shadow)}
 .fix-item:hover{border-color:rgba(212,175,55,.35)}
 .fix-header{display:flex;align-items:center;padding:.7rem .9rem;gap:.5rem}
 .fix-team-side{flex:1;min-width:0}
-.fix-team-name{font-family:'Bebas Neue';font-size:1.05rem;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
-.fix-team-coach{font-size:.62rem;color:var(--muted);margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fix-home .fix-team-name{color:var(--text)}
-.fix-away .fix-team-side{text-align:right}
-.fix-away .fix-team-name{color:var(--text)}
+.fix-team-name{font-family:'Bebas Neue';font-size:1.05rem;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;display:block}
+.fix-team-coach{font-size:.62rem;color:var(--muted);margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.fix-home .fix-team-name{color:var(--text);text-align:left}
+.fix-home .fix-team-coach{text-align:left}
+.fix-away{text-align:right}
+.fix-away .fix-team-name{color:var(--text);text-align:right}
+.fix-away .fix-team-coach{text-align:right}
 .fix-vs-badge{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--card2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:800;color:var(--muted);letter-spacing:.5px}
 .fix-footer{display:flex;align-items:center;justify-content:space-between;padding:.35rem .9rem .5rem;border-top:1px solid var(--border);background:var(--card2)}
 .fix-date{font-size:.65rem;color:var(--muted)}
@@ -825,12 +833,29 @@ function renderResults(){
       '<div id="'+uid+'" style="display:'+(isLatest?'block':'none')+';overflow:hidden">';
 
     rm.forEach(function(m){
+      var homeWin=m.homeScore>m.awayScore;
+      var awayWin=m.awayScore>m.homeScore;
+      var homeCoach=getCoach(m.homeName);
+      var awayCoach=getCoach(m.awayName);
       h+='<div class="r-item">'+
-        '<div class="r-match">'+
-        '<div class="r-teams">'+m.homeName+' vs '+m.awayName+'</div>'+
-        (m.date?'<div class="r-meta">'+m.date+'</div>':'')+
+        '<div class="r-matchup">'+
+        '<div class="r-home-side">'+
+        '<div class="r-tname" style="'+(homeWin?'color:var(--green)':'')+'">'+
+        (homeWin?'🏆 ':'')+m.homeName+
         '</div>'+
+        (homeCoach?'<div class="r-tcoach">🧢 '+homeCoach+'</div>':'<div class="r-tcoach"></div>')+
+        '</div>'+
+        '<div class="r-score-badge">'+
         '<div class="r-score">'+m.homeScore+' – '+m.awayScore+'</div>'+
+        (m.date?'<div class="r-meta">'+m.date+'</div>':'<div class="r-meta">Final</div>')+
+        '</div>'+
+        '<div class="r-away-side">'+
+        '<div class="r-tname" style="'+(awayWin?'color:var(--green)':'')+'">'+
+        m.awayName+(awayWin?' 🏆':'')+
+        '</div>'+
+        (awayCoach?'<div class="r-tcoach">'+awayCoach+' 🧢</div>':'<div class="r-tcoach"></div>')+
+        '</div>'+
+        '</div>'+
         '</div>';
     });
 
@@ -873,7 +898,7 @@ function buildFixCard(homeName, awayName, footerLeft, footerRight){
     // Away side
     '<div class="fix-team-side fix-away">'+
     '<div class="fix-team-name">'+awayName+'</div>'+
-    (awayCoach ? '<div class="fix-team-coach">🧢 '+awayCoach+'</div>' : '<div class="fix-team-coach" style="opacity:0">–</div>')+
+    (awayCoach ? '<div class="fix-team-coach">'+awayCoach+' 🧢</div>' : '<div class="fix-team-coach" style="opacity:0">–</div>')+
     '</div>'+
     '</div>'+
     '<div class="fix-footer">'+

@@ -50,12 +50,6 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
 <h1>⚽ PFL Zone Firebase Manager</h1>
 <p class="sub">Direct Firebase data viewer & fixer · Read-write access</p>
 
-<div id="tourSelectorWrap" class="card" style="margin-bottom:1rem">
-  <div class="card-title" style="margin-bottom:.6rem">🏆 Select Tournament to Work On</div>
-  <select id="tourSelector" onchange="onTourSelect()"><option value="">-- Loading tournaments... --</option></select>
-  <div id="tourSelectorMeta" style="font-size:.72rem;color:var(--muted);margin-top:-.3rem"></div>
-</div>
-
 <div class="tab-bar">
   <button class="tab active" onclick="switchTab('teams')">👥 Teams</button>
   <button class="tab" onclick="switchTab('fixtures')">📅 Fixtures</button>
@@ -158,10 +152,6 @@ const auth = getAuth(app);
 
 // Auth check
 onAuthStateChanged(auth, user => {
-  if(user){
-    // Load tournament selector as soon as auth confirms
-    loadTourSelector();
-  }
   if(!user){
     document.body.innerHTML = `
       <div style="max-width:360px;margin:3rem auto;padding:1rem">
@@ -186,48 +176,12 @@ async function getAllData() {
   return snap.val() || {};
 }
 
-// Tournament selector state
-let _allTourData = null;
-
-async function loadTourSelector() {
-  try {
-    _allTourData = await getAllData();
-    const sel = document.getElementById('tourSelector');
-    const keys = Object.keys(_allTourData);
-    if(!keys.length){ sel.innerHTML='<option value="">No tournaments found in Firebase</option>'; return; }
-    sel.innerHTML = keys.map(k => {
-      const t = _allTourData[k];
-      const status = t.status==='finished' ? ' 🏁 FINISHED' : ' ✅ ACTIVE';
-      return `<option value="${k}">${t.name}${status} · ${(t.teams||[]).length} teams · ${(t.matches||[]).filter(m=>m.done).length} results</option>`;
-    }).join('');
-    onTourSelect();
-  } catch(e) {
-    document.getElementById('tourSelector').innerHTML='<option value="">Error loading: '+e.message+'</option>';
-  }
-}
-
-function onTourSelect(){
-  const sel = document.getElementById('tourSelector');
-  const meta = document.getElementById('tourSelectorMeta');
-  const key = sel.value;
-  if(!key||!_allTourData||!_allTourData[key]){ meta.textContent=''; return; }
-  const t = _allTourData[key];
-  const done = (t.matches||[]).filter(m=>m.done).length;
-  meta.textContent = `${t.format==='league'?'League':'Groups'} · ${(t.teams||[]).length} teams · ${done} results · ID: ${key.slice(-12)}`;
-}
-
-// Get the currently selected tournament
-function getSelectedTourKey(){
-  const key = document.getElementById('tourSelector').value;
-  if(!key) throw new Error('No tournament selected — use the selector at the top first');
-  return key;
-}
-
-async function getSelectedTour(){
+// Get first tournament (or all)
+async function getFirstTour() {
   const all = await getAllData();
-  const key = getSelectedTourKey();
-  if(!all[key]) throw new Error('Selected tournament not found in Firebase');
-  return { key, data: all[key], all };
+  const keys = Object.keys(all);
+  if(!keys.length) return null;
+  return { key: keys[0], data: all[keys[0]] };
 }
 
 // ─── LOAD TEAMS ───
@@ -277,7 +231,8 @@ window.loadTeamsForReassign = async () => {
   log.style.display = 'block';
   log.textContent = '🔄 Loading teams from Firebase...\n';
   try {
-    const { data: tour } = await getSelectedTour();
+    const all = await getAllData();
+    const tour = Object.values(all)[0];
     const teams = tour.teams || [];
     const opts = '<option value="">-- Select --</option>' +
       teams.map(t => {
@@ -303,7 +258,9 @@ window.reassignTeamId = async () => {
   if(String(sourceId) === String(targetId)){ log.textContent = '❌ Select different teams!'; return; }
 
   try {
-    const { key: tourKey, data: tour } = await getSelectedTour();
+    const all = await getAllData();
+    const tourKey = Object.keys(all)[0];
+    const tour = all[tourKey];
 
     const sourceTeam = tour.teams.find(t=>String(t.id)===String(sourceId));
     const targetTeam = tour.teams.find(t=>String(t.id)===String(targetId));
@@ -377,7 +334,9 @@ window.forceDeleteTeam = async () => {
 
   log.textContent = '🔄 Connecting to Firebase...\n';
   try {
-    const { key: tourKey, data: tour } = await getSelectedTour();
+    const all = await getAllData();
+    const tourKey = Object.keys(all)[0];
+    const tour = all[tourKey];
     // Match by exact ID OR by string conversion (handles numeric IDs)
     const team = (tour.teams||[]).find(t=>String(t.id)===String(tid));
 
@@ -427,7 +386,10 @@ window.loadFixtures = async () => {
   const el = document.getElementById('fixturesOutput');
   el.innerHTML = '<div><span class="spinner"></span> Loading...</div>';
   try {
-    const { data: tour } = await getSelectedTour();
+    const all = await getAllData();
+    const tours = Object.values(all);
+    if(!tours.length){ el.innerHTML='<div class="warn">No data found</div>'; return; }
+    const tour = tours[0];
     const matches = tour.matches || [];
     const rounds = [...new Set(matches.map(m=>m.round))];
     let html = `<div style="font-size:.75rem;color:var(--muted);margin-bottom:.8rem">${matches.length} total fixtures</div>`;
@@ -458,7 +420,9 @@ window.editFixtureTeam = async () => {
   log.style.display = 'block';
   if(!fid||!oldId||!newId){ log.textContent='❌ Fill all three fields'; return; }
   try {
-    const { key: tourKey, data: tour } = await getSelectedTour();
+    const all = await getAllData();
+    const tourKey = Object.keys(all)[0];
+    const tour = all[tourKey];
     const m = (tour.matches||[]).find(x=>x.id===fid);
     if(!m){ log.textContent=`❌ Fixture ID "${fid}" not found`; return; }
     const newTeam = (tour.teams||[]).find(t=>t.id===newId);
@@ -474,7 +438,8 @@ window.editFixtureTeam = async () => {
 // ─── MERGE TEAMS ───
 window.loadTeamsForMerge = async () => {
   try {
-    const { data: tour } = await getSelectedTour();
+    const all = await getAllData();
+    const tour = Object.values(all)[0];
     const teams = tour.teams || [];
     const opts = '<option value="">-- Select --</option>' + teams.map(t=>`<option value="${t.id}">${t.name} · ID:${t.id.slice(-6)} · ${t.played||0}P ${t.points||0}pts</option>`).join('');
     document.getElementById('mergeRemove').innerHTML = opts;
@@ -496,7 +461,9 @@ window.doMerge = async () => {
   if(removeId===keepId){ log.textContent='❌ Select different teams!'; return; }
 
   try {
-    const { key: tourKey, data: tour } = await getSelectedTour();
+    const all = await getAllData();
+    const tourKey = Object.keys(all)[0];
+    const tour = all[tourKey];
     const removeTeam = tour.teams.find(t=>t.id===removeId);
     const keepTeam = tour.teams.find(t=>t.id===keepId);
     if(!confirm(`MERGE:\nREMOVE: ${removeTeam.name} (ID: ${removeId})\nKEEP: ${keepTeam.name} (ID: ${keepId})\n\nAll fixtures with the removed team will update to the keep team. Continue?`)) return;
