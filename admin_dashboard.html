@@ -556,7 +556,13 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
       <button class="btn-full btn-gold" onclick="changePw()">CHANGE PASSWORD</button>
     </div>
     <div class="card">
+      <div class="card-title" style="color:var(--green)">🏁 Season Status</div>
+      <div class="info info-green" style="margin-bottom:.8rem">Mark this tournament as finished when all matches and playoffs are done. It moves to "Past Seasons" on the public page but all data is kept forever.</div>
+      <div id="finishStatusWrap"></div>
+    </div>
+    <div class="card">
       <div class="card-title" style="color:var(--red)">🔴 Danger Zone</div>
+      <div class="info info-red" style="margin-bottom:.8rem">Delete permanently removes this tournament from Firebase. Only use this if the tournament was created by mistake before any real data was entered.</div>
       <button class="btn-full btn-red" onclick="resetResults()" style="margin-bottom:.6rem">RESET ALL RESULTS</button>
       <button class="btn-full btn-red" onclick="deleteTournament()">DELETE THIS TOURNAMENT</button>
     </div>
@@ -663,6 +669,12 @@ window._fbLoadAll = () => {
   return get(r).then(snap => snap.val());
 };
 
+// Delete a single tournament from Firebase (set to null removes it)
+window._fbDeleteTour = (tid) => {
+  const r = ref(database, 'tournaments/' + tid);
+  return set(r, null);
+};
+
 // Registry: save/load/delete a single team
 window._fbSaveRegTeam = (tid, teamData) => {
   const r = ref(database, 'registry/' + tid);
@@ -743,14 +755,35 @@ function doLogout(){
 function renderList(){
   const el=document.getElementById('tList');
   if(!db.tournaments.length){el.innerHTML='<div class="t-empty"><div class="t-empty-icon">🏆</div><p>No tournaments yet.<br>Create one below!</p></div>';return;}
-  el.innerHTML=db.tournaments.map(t=>`
-    <div class="t-card" onclick="openTour('${t.id}')">
-      <div>
-        <div class="t-card-name">${t.name}</div>
-        <div class="t-card-meta">${t.season||''} · ${t.format==='league'?'League':'Groups'} · ${(t.teams||[]).length} teams · ${(t.matches||[]).filter(m=>m.done).length} results</div>
-      </div>
-      <span class="t-card-badge">${t.format==='league'?'📋':'🏟️'}</span>
-    </div>`).join('');
+  const active=db.tournaments.filter(t=>t.status!=='finished');
+  const finished=db.tournaments.filter(t=>t.status==='finished');
+  let h='';
+  if(active.length){
+    h+=active.map(t=>`
+      <div class="t-card" onclick="openTour('${t.id}')">
+        <div>
+          <div class="t-card-name">${t.name}</div>
+          <div class="t-card-meta">${t.season||''} · ${t.format==='league'?'League':'Groups'} · ${(t.teams||[]).length} teams · ${(t.matches||[]).filter(m=>m.done).length} results</div>
+        </div>
+        <span class="t-card-badge">${t.format==='league'?'📋':'🏟️'}</span>
+      </div>`).join('');
+  } else {
+    h+='<div class="t-empty" style="padding:1.5rem"><div class="t-empty-icon">🏆</div><p>No active tournaments.<br>Create one below!</p></div>';
+  }
+  if(finished.length){
+    h+=`<div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--border)">
+      <div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--muted);margin-bottom:.8rem">🏁 Finished Seasons</div>`;
+    h+=finished.map(t=>`
+      <div class="t-card" onclick="openTour('${t.id}')" style="opacity:.75;border-color:rgba(212,175,55,.25)">
+        <div>
+          <div class="t-card-name" style="color:var(--muted)">${t.name} <span style="font-size:.7rem;color:var(--gold);font-family:'Bebas Neue';letter-spacing:1px;background:rgba(212,175,55,.1);padding:.1rem .4rem;border-radius:4px">FINISHED</span></div>
+          <div class="t-card-meta">${t.season||''} · ${t.format==='league'?'League':'Groups'} · ${(t.teams||[]).length} teams · ${(t.matches||[]).filter(m=>m.done).length} results</div>
+        </div>
+        <span class="t-card-badge">🏁</span>
+      </div>`).join('');
+    h+='</div>';
+  }
+  el.innerHTML=h;
 }
 
 // ═══════════════════════════════════════════
@@ -958,6 +991,7 @@ function showTab(name){
   if(name==='teams'){renderTeams();buildRegistryDropdown();}
   if(name==='playoffs'){renderPlayoffs();checkPlayoffAlertFull();}
   if(name==='rules')loadRulesEditor();
+  if(name==='settings')renderFinishStatus();
 }
 
 // ═══════════════════════════════════════════
@@ -2102,9 +2136,52 @@ function resetResults(){
   sdb();updateAll();toast('Results reset');
 }
 function deleteTournament(){
-  if(!confirm('DELETE this entire tournament? This cannot be undone!'))return;
-  db.tournaments=db.tournaments.filter(t=>t.id!==activeTid);
-  sdb();backToList();toast('Tournament deleted');
+  if(!confirm('DELETE this entire tournament from Firebase permanently?\n\nOnly do this if it was created by mistake. This cannot be undone!'))return;
+  const tid=activeTid;
+  db.tournaments=db.tournaments.filter(t=>t.id!==tid);
+  localStorage.setItem('pfl_db',JSON.stringify(db));
+  // Delete from Firebase (set to null removes the node)
+  if(window._fbDeleteTour){
+    window._fbDeleteTour(tid)
+      .then(()=>toast('Tournament deleted from Firebase'))
+      .catch(()=>toast('Deleted locally — Firebase delete failed, check connection',true));
+  }
+  backToList();
+}
+
+function markFinished(){
+  const tour=getTour();if(!tour)return;
+  if(!confirm('Mark "'+tour.name+'" as finished?\n\nIt will move to Past Seasons on the public page. All data stays intact and you can restore it anytime.'))return;
+  tour.status='finished';
+  sdb();
+  renderFinishStatus();
+  renderList();
+  toast('🏁 '+tour.name+' marked as finished!');
+}
+
+function markActive(){
+  const tour=getTour();if(!tour)return;
+  if(!confirm('Restore "'+tour.name+'" as an active tournament?'))return;
+  tour.status='active';
+  sdb();
+  renderFinishStatus();
+  renderList();
+  toast('✅ '+tour.name+' restored to active!');
+}
+
+function renderFinishStatus(){
+  const tour=getTour();
+  const el=document.getElementById('finishStatusWrap');
+  if(!el||!tour)return;
+  if(tour.status==='finished'){
+    el.innerHTML=`<div style="text-align:center;padding:.5rem 0;margin-bottom:.8rem">
+      <div style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold);letter-spacing:2px">🏁 FINISHED SEASON</div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">This tournament is in Past Seasons on the public page</div>
+    </div>
+    <button class="btn-full btn-outline" onclick="markActive()">↩️ RESTORE AS ACTIVE</button>`;
+  } else {
+    el.innerHTML=`<button class="btn-full btn-green" onclick="markFinished()">🏁 MARK AS FINISHED</button>`;
+  }
 }
 
 // ═══════════════════════════════════════════
