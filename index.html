@@ -941,33 +941,53 @@ function renderFixtures(){
 
   var h='';
 
-  // League fixtures grouped by round
+  // League fixtures grouped by round — earliest matchday open by default
   if(pending.length){
     var rounds=pending.map(function(m){ return m.round; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
-    rounds.forEach(function(r){
-      h+='<div style="margin-bottom:1.4rem">'+
-        '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem">'+
+    rounds.forEach(function(r, ri){
+      var rm=pending.filter(function(m){ return m.round===r; });
+      var isFirst=ri===0; // earliest upcoming matchday open by default
+      var uid='fix_'+ri;
+      h+='<div style="margin-bottom:.5rem">'+
+        '<button onclick="toggleRound(\''+uid+'\')" style="width:100%;background:none;border:none;cursor:pointer;padding:0;margin-bottom:.4rem">'+
+        '<div style="display:flex;align-items:center;gap:.6rem">'+
         '<div style="flex:1;height:1px;background:var(--border)"></div>'+
-        '<div style="font-family:\'Bebas Neue\';font-size:.95rem;letter-spacing:2px;color:var(--gold);padding:.2rem .8rem;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:20px;white-space:nowrap">📅 '+r+'</div>'+
-        '<div style="flex:1;height:1px;background:var(--border)"></div></div>';
-      pending.filter(function(m){ return m.round===r; }).forEach(function(m){
+        '<div style="font-family:\'Bebas Neue\';font-size:.95rem;letter-spacing:2px;color:var(--gold);padding:.2rem .8rem;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:.5rem">'+
+        '<span>📅 '+r+'</span>'+
+        '<span style="font-size:.65rem;color:var(--muted)">'+rm.length+' match'+(rm.length!==1?'es':'')+'</span>'+
+        '<span id="arr_'+uid+'" style="font-size:.7rem;color:var(--muted);transition:transform .25s;display:inline-block;transform:'+(isFirst?'rotate(0deg)':'rotate(-90deg)')+'">▼</span>'+
+        '</div>'+
+        '<div style="flex:1;height:1px;background:var(--border)"></div>'+
+        '</div>'+
+        '</button>'+
+        '<div id="'+uid+'" style="display:'+(isFirst?'block':'none')+';overflow:hidden">';
+      rm.forEach(function(m){
         h+=buildFixCard(m.homeName, m.awayName, m.date||'📅 Date TBC', r);
       });
-      h+='</div>';
+      h+='</div></div>';
     });
   }
 
-  // Playoff/bracket fixtures
+  // Playoff/bracket fixtures — collapsible, open by default
   if(bracketPending.length){
-    h+='<div style="margin-bottom:1.4rem">'+
-      '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem">'+
+    var uid='fix_po';
+    h+='<div style="margin-bottom:.5rem">'+
+      '<button onclick="toggleRound(\''+uid+'\')" style="width:100%;background:none;border:none;cursor:pointer;padding:0;margin-bottom:.4rem">'+
+      '<div style="display:flex;align-items:center;gap:.6rem">'+
       '<div style="flex:1;height:1px;background:var(--border)"></div>'+
-      '<div style="font-family:\'Bebas Neue\';font-size:.95rem;letter-spacing:2px;color:var(--gold);padding:.2rem .8rem;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:20px;white-space:nowrap">🏆 Playoffs</div>'+
-      '<div style="flex:1;height:1px;background:var(--border)"></div></div>';
+      '<div style="font-family:\'Bebas Neue\';font-size:.95rem;letter-spacing:2px;color:var(--gold);padding:.2rem .8rem;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:.5rem">'+
+      '<span>🏆 Playoffs</span>'+
+      '<span style="font-size:.65rem;color:var(--muted)">'+bracketPending.length+' match'+(bracketPending.length!==1?'es':'')+'</span>'+
+      '<span id="arr_'+uid+'" style="font-size:.7rem;color:var(--muted);transition:transform .25s;display:inline-block;transform:rotate(0deg)">▼</span>'+
+      '</div>'+
+      '<div style="flex:1;height:1px;background:var(--border)"></div>'+
+      '</div>'+
+      '</button>'+
+      '<div id="'+uid+'" style="display:block;overflow:hidden">';
     bracketPending.forEach(function(m){
       h+=buildFixCard(m.homeName, m.awayName, m.date||'📅 Date TBC', m.round+(m.legs===2?' · H&A':' · Single'));
     });
-    h+='</div>';
+    h+='</div></div>';
   }
 
   el.innerHTML=h;
