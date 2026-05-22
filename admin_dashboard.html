@@ -381,6 +381,7 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
   <div class="tabs">
     <button class="tab qs-tab active" onclick="showTab('qs')" id="tab-qs">⚡ Quick Score</button>
     <button class="tab" onclick="showTab('schedule')" id="tab-schedule">📅 Schedule</button>
+    <button class="tab" onclick="showTab('results')" id="tab-results">✅ Results</button>
     <button class="tab" onclick="showTab('table')" id="tab-table">📊 Table</button>
     <button class="tab" onclick="showTab('teams')" id="tab-teams">👥 Teams</button>
     <button class="tab" onclick="showTab('playoffs')" id="tab-playoffs">🏆 Playoffs</button>
@@ -434,6 +435,15 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
   </div>
 
   <!-- TABLE -->
+  <!-- RESULTS -->
+  <div class="tab-content" id="tc-results">
+    <div class="card">
+      <div class="card-title" style="color:var(--green)">✅ Completed Results</div>
+      <div class="info" style="margin-bottom:.8rem">Tap ✏️ Edit on any result to correct a wrong score. Stats are automatically recalculated.</div>
+      <div id="resultsEditGrid"><div class="empty">No completed matches yet</div></div>
+    </div>
+  </div>
+
   <div class="tab-content" id="tc-table">
     <div id="tableView"><div class="empty">No data yet</div></div>
   </div>
@@ -964,6 +974,7 @@ function showTab(name){
   document.getElementById('tc-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='table')renderTable();
+  if(name==='results')renderResultsEdit();
   if(name==='teams'){renderTeams();buildRegistryDropdown();}
   if(name==='playoffs'){renderPlayoffs();checkPlayoffAlertFull();}
   if(name==='rules')loadRulesEditor();
@@ -1210,6 +1221,51 @@ function getTeamCoach(teamName){
   return t && t.coach ? '🧢 ' + t.coach : '';
 }
 
+function renderResultsEdit(){
+  const tour=getTour();
+  const el=document.getElementById('resultsEditGrid');
+  if(!el)return;
+  if(!tour){el.innerHTML='<div class="empty">No data</div>';return;}
+  const done=[...tour.matches.filter(m=>m.done)].reverse();
+  if(!done.length){el.innerHTML='<div class="empty">No completed matches yet</div>';return;}
+  const rounds=[...new Set(done.map(m=>m.round))];
+  let h='';
+  rounds.forEach(r=>{
+    const rm=done.filter(m=>m.round===r);
+    h+=`<div style="margin-bottom:1.2rem">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--green);padding:.2rem .8rem;background:rgba(6,255,165,.08);border:1px solid rgba(6,255,165,.25);border-radius:20px;white-space:nowrap">✅ ${r}</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>`;
+    rm.forEach(m=>{
+      const homeWin=m.homeScore>m.awayScore, awayWin=m.awayScore>m.homeScore;
+      const hCoach=getTeamCoach(m.homeName), aCoach=getTeamCoach(m.awayName);
+      h+=`<div style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:.8rem 1rem;margin-bottom:.5rem;overflow:hidden;position:relative">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px;background:var(--green)"></div>
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:.55rem">📅 ${m.date||'Date TBC'}</div>
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${homeWin?'color:var(--green)':''}">${homeWin?'🏆 ':''}${m.homeName}</div>
+            ${hCoach?`<div style="font-size:.68rem;color:var(--gold);margin-top:.1rem">${hCoach}</div>`:''}
+          </div>
+          <div style="flex-shrink:0;text-align:center;min-width:52px">
+            <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--gold);letter-spacing:3px;line-height:1">${m.homeScore} – ${m.awayScore}</div>
+            <div style="font-size:.55rem;color:var(--green);font-weight:800;letter-spacing:1px">✅ FINAL</div>
+          </div>
+          <div style="flex:1;min-width:0;text-align:right">
+            <div style="font-weight:800;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${awayWin?'color:var(--green)':''}">${m.awayName}${awayWin?' 🏆':''}</div>
+            ${aCoach?`<div style="font-size:.68rem;color:var(--gold);margin-top:.1rem;text-align:right">${aCoach}</div>`:''}
+          </div>
+        </div>
+        <button onclick="openEditScore('${m.id}')" style="width:100%;padding:.4rem;background:rgba(77,159,255,.1);color:var(--blue);border:1.5px solid var(--blue);border-radius:6px;font-family:'Barlow';font-weight:800;font-size:.72rem;cursor:pointer;text-transform:uppercase;letter-spacing:1px">✏️ EDIT THIS RESULT</button>
+      </div>`;
+    });
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
 function renderQS(){
   const tour=getTour();
   if(tour) normalizeTour(tour);if(!tour)return;
@@ -1355,6 +1411,7 @@ function saveScore(){
   closeScore();sdb();updateAll();
   toast(`🥅 ${h.name} ${smH} – ${smA} ${a.name}`);
   checkPlayoffAlert();
+  if(document.getElementById('tc-results')&&document.getElementById('tc-results').classList.contains('active'))renderResultsEdit();
 }
 
 // ═══════════════════════════════════════════
