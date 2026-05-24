@@ -182,6 +182,11 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
 .seg-btn{flex:1;padding:.5rem;background:none;border:none;color:var(--muted);font-family:'Barlow';font-weight:700;font-size:.78rem;cursor:pointer;transition:all .2s;text-align:center}
 .seg-btn.on{background:rgba(212,175,55,.15);color:var(--gold)}
 
+/* ─── VOID MATCH ─── */
+.fix-card.voided{opacity:.5;border-color:var(--red)!important;cursor:default}
+.fix-card.voided::before{background:var(--red)!important}
+.void-badge{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.5px;padding:.1rem .4rem;border-radius:3px;background:rgba(255,51,85,.18);color:var(--red);text-transform:uppercase;margin-left:.4rem}
+
 @media(max-width:400px){.stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -395,7 +400,7 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
       <div class="stat"><div class="stat-n" id="st-teams" style="color:var(--gold)">0</div><div class="stat-l">Teams</div></div>
       <div class="stat"><div class="stat-n" id="st-played" style="color:var(--green)">0</div><div class="stat-l">Played</div></div>
       <div class="stat"><div class="stat-n" id="st-pending" style="color:#ffa300">0</div><div class="stat-l">Pending</div></div>
-      <div class="stat"><div class="stat-n" id="st-goals" style="color:var(--blue)">0</div><div class="stat-l">Goals</div></div>
+      <div class="stat"><div class="stat-n" id="st-voided" style="color:var(--red)">0</div><div class="stat-l">Voided</div></div>
     </div>
     <div id="playoffAlertBox"></div>
     <div class="card">
@@ -405,6 +410,10 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
     <div class="card">
       <div class="card-title">✅ Completed</div>
       <div id="doneGrid" class="fix-grid"><div class="empty">No completed matches yet</div></div>
+    </div>
+    <div class="card" id="voidedCard" style="display:none">
+      <div class="card-title" style="color:var(--red)">🚫 Voided Matches</div>
+      <div id="voidedGrid" class="fix-grid"></div>
     </div>
   </div>
 
@@ -427,6 +436,18 @@ td.pts{font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold)}
       <div class="card-title">🗓️ Auto-Generate Fixtures</div>
       <div class="info">Generates all matchups so each team plays once per matchday (round-robin).</div>
       <button class="btn-full btn-outline" onclick="autoGenFixtures()">GENERATE ALL FIXTURES</button>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--red)">🚫 Void Outstanding Matches</div>
+      <div class="info info-red" style="margin-bottom:.8rem">
+        Marks all <strong>unplayed</strong> matches as <strong>VOID</strong> — no points are given to anyone. Useful when a deadline (e.g. 12:00) passes and some teams haven't played.<br><br>
+        Voided matches stay visible but are clearly marked null. Teams that played and lost keep their result — only unplayed matches are affected.
+      </div>
+      <div style="margin-bottom:.8rem">
+        <label class="lbl">Void matches in round (optional — leave blank to void ALL pending)</label>
+        <input type="text" id="voidRoundInput" placeholder="e.g. Matchday 3 — or leave blank for all pending" list="roundHints" style="margin-bottom:.5rem">
+      </div>
+      <button class="btn-full btn-red" onclick="voidOutstandingMatches()">🚫 VOID OUTSTANDING MATCHES</button>
     </div>
     <div class="card">
       <div class="card-title">📋 All Fixtures</div>
@@ -1187,7 +1208,14 @@ function renderFixtureList(){
   rounds.forEach(r=>{
     h+=`<div style="margin-bottom:1rem"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:.4rem;padding:.3rem .5rem;background:var(--card2);border-radius:4px">${r}</div>`;
     tour.matches.filter(m=>m.round===r).forEach(m=>{
-      if(m.done){
+      if(m.voided){
+        h+=`<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid var(--border);opacity:.55">
+          <span style="flex:1;font-size:.85rem;font-weight:600;text-decoration:line-through;color:var(--muted)">${m.homeName} vs ${m.awayName}</span>
+          <span class="void-badge">🚫 VOID</span>
+          <button onclick="unvoidMatch('${m.id}')" style="background:none;border:1px solid rgba(212,175,55,.4);color:var(--gold);padding:.2rem .45rem;border-radius:4px;font-size:.72rem;cursor:pointer;font-weight:700" title="Restore this match">↩️</button>
+          <button class="del-btn" onclick="deleteFixture('${m.id}')">✕</button>
+        </div>`;
+      } else if(m.done){
         h+=`<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
           <span style="flex:1;font-size:.85rem;font-weight:600">${m.homeName} vs ${m.awayName}</span>
           <button onclick="openEditScore('${m.id}')" style="background:rgba(6,255,165,.1);border:1px solid rgba(6,255,165,.4);color:var(--green);padding:.2rem .5rem;border-radius:4px;font-size:.8rem;cursor:pointer;font-family:'Bebas Neue';letter-spacing:1px" title="Tap to edit score">${m.homeScore} – ${m.awayScore}</button>
@@ -1271,7 +1299,8 @@ function renderQS(){
   if(tour) normalizeTour(tour);if(!tour)return;
   // Trim round names to fix any invisible whitespace that could break grouping
   tour.matches.forEach(m=>{if(m.round)m.round=m.round.trim();});
-  const pending=tour.matches.filter(m=>!m.done);
+  const pending=tour.matches.filter(m=>!m.done&&!m.voided);
+  const voided=tour.matches.filter(m=>m.voided);
   const done=[...tour.matches.filter(m=>m.done)].reverse().slice(0,16);
 
   const pEl=document.getElementById('pendingGrid');
@@ -1315,10 +1344,49 @@ function renderQS(){
     pEl.innerHTML=pH;
   }
 
+  // ── Voided matches section ──
+  const vCard=document.getElementById('voidedCard');
+  const vEl=document.getElementById('voidedGrid');
+  if(voided.length&&vCard&&vEl){
+    vCard.style.display='block';
+    const vRounds=[...new Set(voided.map(m=>m.round))];
+    let vH='';
+    vRounds.forEach(r=>{
+      const rm=voided.filter(m=>m.round===r);
+      vH+=`<div style="margin-bottom:1.2rem">
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--red);padding:.2rem .8rem;background:rgba(255,51,85,.08);border:1px solid rgba(255,51,85,.25);border-radius:20px;white-space:nowrap">🚫 ${r}</div>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+        <div class="fix-grid">
+          ${rm.map(m=>`
+          <div class="fix-card voided" style="pointer-events:none">
+            <div class="fix-round" style="color:var(--red)">🚫 VOIDED — NULL RESULT</div>
+            <div class="fix-matchup">
+              <div class="fix-team-side">
+                <div class="fix-team-name" style="text-decoration:line-through;color:var(--muted)">${m.homeName}</div>
+              </div>
+              <div class="fix-vs-badge" style="border-color:var(--red);color:var(--red)">VS</div>
+              <div class="fix-away-side">
+                <div class="fix-team-name" style="text-decoration:line-through;color:var(--muted)">${m.awayName}</div>
+              </div>
+            </div>
+          </div>
+          <div style="pointer-events:auto;text-align:center;margin-top:-.4rem;margin-bottom:.4rem">
+            <button onclick="unvoidMatch('${m.id}')" style="background:none;border:1px solid rgba(212,175,55,.4);color:var(--gold);padding:.25rem .8rem;border-radius:6px;font-size:.72rem;cursor:pointer;font-weight:700">↩️ Restore Match</button>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    });
+    vEl.innerHTML=vH;
+  } else if(vCard){
+    vCard.style.display='none';
+  }
+
   if(!done.length){dEl.innerHTML='<div class="empty">No results yet</div>';}
   else{
     const dRounds=[...new Set(done.map(m=>m.round))];
-    let dH='';
     dRounds.forEach(r=>{
       const rMatches=done.filter(m=>m.round===r);
       dH+=`<div style="margin-bottom:1.2rem">
@@ -1357,7 +1425,7 @@ function openScore(mid){
   smFid=mid;smH=0;smA=0;
   const tour=getTour();
   const m=tour.matches.find(x=>x.id===mid);
-  if(!m||m.done)return;
+  if(!m||m.done||m.voided) return; // block voided matches
   document.getElementById('smHome').textContent=m.homeName;
   document.getElementById('smAway').textContent=m.awayName;
   document.getElementById('smHomeCoach').textContent=getTeamCoach(m.homeName);
@@ -2118,11 +2186,11 @@ function resetBracket(){
 function updateStats(){
   const tour=getTour();if(!tour)return;
   const done=tour.matches.filter(m=>m.done);
-  const goals=done.reduce((s,m)=>s+m.homeScore+m.awayScore,0);
+  const voided=tour.matches.filter(m=>m.voided);
   document.getElementById('st-teams').textContent=tour.teams.length;
   document.getElementById('st-played').textContent=done.length;
-  document.getElementById('st-pending').textContent=tour.matches.filter(m=>!m.done).length;
-  document.getElementById('st-goals').textContent=goals;
+  document.getElementById('st-pending').textContent=tour.matches.filter(m=>!m.done&&!m.voided).length;
+  document.getElementById('st-voided').textContent=voided.length;
 }
 
 // ═══════════════════════════════════════════
@@ -2205,6 +2273,37 @@ function deleteTournament(){
 // ═══════════════════════════════════════════
 function updateAll(){
   updateStats();renderQS();renderFixtureList();
+  if(document.getElementById('tc-results')&&document.getElementById('tc-results').classList.contains('active'))renderResultsEdit();
+}
+
+// ═══════════════════════════════════════════
+// VOID OUTSTANDING MATCHES
+// ═══════════════════════════════════════════
+function voidOutstandingMatches(){
+  const tour=getTour();if(!tour)return;
+  normalizeTour(tour);
+  const roundFilter=document.getElementById('voidRoundInput').value.trim().toLowerCase();
+  let targets=tour.matches.filter(m=>!m.done&&!m.voided);
+  if(roundFilter) targets=targets.filter(m=>m.round&&m.round.trim().toLowerCase()===roundFilter);
+  if(!targets.length){
+    toast(roundFilter?`No unplayed matches found in "${document.getElementById('voidRoundInput').value.trim()}" — check the round name`:'No pending matches to void',true);
+    return;
+  }
+  const roundLabel=roundFilter?`"${document.getElementById('voidRoundInput').value.trim()}"`:'all pending rounds';
+  if(!confirm(`Void ${targets.length} unplayed match${targets.length>1?'es':''}in ${roundLabel}?\n\n✅ Teams that already played keep their results.\n🚫 These matches will be marked NULL — no points given to anyone.\n\nThis cannot be undone automatically (use Unvoid on individual matches to restore).`))return;
+  targets.forEach(m=>{m.voided=true;m.voidedAt=Date.now();});
+  document.getElementById('voidRoundInput').value='';
+  sdb();updateAll();
+  toast(`🚫 ${targets.length} match${targets.length>1?'es':''} voided — no points awarded`);
+}
+
+function unvoidMatch(mid){
+  const tour=getTour();if(!tour)return;
+  const m=tour.matches.find(x=>x.id===mid);if(!m||!m.voided)return;
+  if(!confirm(`Restore "${m.homeName} vs ${m.awayName}" as a playable fixture?\n\nThe match will go back to pending — no score entered.`))return;
+  m.voided=false;m.voidedAt=null;
+  sdb();updateAll();
+  toast(`Match restored to pending`);
 }
 function toggleDashPw(id,btn){
   const input=document.getElementById(id);

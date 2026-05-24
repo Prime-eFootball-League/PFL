@@ -913,8 +913,8 @@ function renderFixtures(){
   var el=document.getElementById('secFixtures');
   if(!tour){el.innerHTML='<div class="empty">No data</div>';return;}
 
-  // League pending matches
-  var pending=(tour.matches||[]).filter(function(m){ return !m.done; });
+  // League pending matches (exclude voided)
+  var pending=(tour.matches||[]).filter(function(m){ return !m.done&&!m.voided; });
 
   // Bracket pending matches (where both teams are known but not done)
   var bracketPending=[];
@@ -988,6 +988,33 @@ function renderFixtures(){
       h+=buildFixCard(m.homeName, m.awayName, m.date||'📅 Date TBC', m.round+(m.legs===2?' · H&A':' · Single'));
     });
     h+='</div></div>';
+  }
+
+  // Voided matches section (public — read-only informational)
+  var voidedM=(tour.matches||[]).filter(function(m){ return m.voided; });
+  if(voidedM.length){
+    h+='<div style="margin-top:1rem">';
+    var vRounds=voidedM.map(function(m){return m.round;}).filter(function(v,i,a){return a.indexOf(v)===i;});
+    vRounds.forEach(function(r){
+      var rm=voidedM.filter(function(m){return m.round===r;});
+      h+='<div style="margin-bottom:.8rem">'+
+        '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">'+
+        '<div style="flex:1;height:1px;background:var(--border)"></div>'+
+        '<div style="font-family:\'Bebas Neue\';font-size:.85rem;letter-spacing:2px;color:var(--red);padding:.15rem .7rem;background:rgba(255,51,85,.08);border:1px solid rgba(255,51,85,.25);border-radius:20px;white-space:nowrap">🚫 '+r+' — VOIDED</div>'+
+        '<div style="flex:1;height:1px;background:var(--border)"></div>'+
+        '</div>';
+      rm.forEach(function(m){
+        h+='<div style="background:var(--card);border:1px solid rgba(255,51,85,.3);border-radius:10px;padding:.65rem .9rem;margin-bottom:.5rem;opacity:.6">'+
+          '<div style="display:flex;align-items:center;gap:.5rem">'+
+          '<div style="flex:1;font-weight:800;font-size:.85rem;text-decoration:line-through;color:var(--muted)">'+m.homeName+'</div>'+
+          '<div style="flex-shrink:0;font-family:\'Bebas Neue\';font-size:.75rem;color:var(--red);letter-spacing:1px;padding:.2rem .6rem;border:1px solid rgba(255,51,85,.4);border-radius:4px">🚫 NULL</div>'+
+          '<div style="flex:1;font-weight:800;font-size:.85rem;text-align:right;text-decoration:line-through;color:var(--muted)">'+m.awayName+'</div>'+
+          '</div>'+
+          '</div>';
+      });
+      h+='</div>';
+    });
+    h+='</div>';
   }
 
   el.innerHTML=h;
