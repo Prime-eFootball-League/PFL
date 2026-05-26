@@ -1249,6 +1249,32 @@ function getTeamCoach(teamName){
   return t && t.coach ? '🧢 ' + t.coach : '';
 }
 
+// Resolve current team name from stored ID (handles renamed teams)
+function resolveMatchName(m, side){
+  const tour = getTour();
+  const id = side === 'home' ? m.homeId : m.awayId;
+  const fallback = side === 'home' ? m.homeName : m.awayName;
+  if(tour && id){
+    const t = (tour.teams||[]).find(t => t.id === id);
+    if(t) return t.name;
+  }
+  return fallback || '';
+}
+
+function getTeamCoachById(id){
+  const tour = getTour();
+  if(!tour||!id) return '';
+  const t = (tour.teams||[]).find(x => x.id === id);
+  return t && t.coach ? '🧢 ' + t.coach : '';
+}
+
+function resolveCoach(m, side){
+  const id = side === 'home' ? m.homeId : m.awayId;
+  const byId = getTeamCoachById(id);
+  if(byId) return byId;
+  return getTeamCoach(resolveMatchName(m, side));
+}
+
 function renderResultsEdit(){
   const tour=getTour();
   const el=document.getElementById('resultsEditGrid');
@@ -1268,13 +1294,14 @@ function renderResultsEdit(){
       </div>`;
     rm.forEach(m=>{
       const homeWin=m.homeScore>m.awayScore, awayWin=m.awayScore>m.homeScore;
-      const hCoach=getTeamCoach(m.homeName), aCoach=getTeamCoach(m.awayName);
+      const _hName=resolveMatchName(m,'home'), _aName=resolveMatchName(m,'away');
+      const hCoach=resolveCoach(m,'home'), aCoach=resolveCoach(m,'away');
       h+=`<div style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:.8rem 1rem;margin-bottom:.5rem;overflow:hidden;position:relative">
         <div style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px;background:var(--green)"></div>
         <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:.55rem">📅 ${m.date||'Date TBC'}</div>
         <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
           <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${homeWin?'color:var(--green)':''}">${homeWin?'🏆 ':''}${m.homeName}</div>
+            <div style="font-weight:800;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${homeWin?'color:var(--green)':''}">${homeWin?'🏆 ':''}${_hName}</div>
             ${hCoach?`<div style="font-size:.68rem;color:var(--gold);margin-top:.1rem">${hCoach}</div>`:''}
           </div>
           <div style="flex-shrink:0;text-align:center;min-width:52px">
@@ -1282,7 +1309,7 @@ function renderResultsEdit(){
             <div style="font-size:.55rem;color:var(--green);font-weight:800;letter-spacing:1px">✅ FINAL</div>
           </div>
           <div style="flex:1;min-width:0;text-align:right">
-            <div style="font-weight:800;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${awayWin?'color:var(--green)':''}">${m.awayName}${awayWin?' 🏆':''}</div>
+            <div style="font-weight:800;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${awayWin?'color:var(--green)':''}">${_aName}${awayWin?' 🏆':''}</div>
             ${aCoach?`<div style="font-size:.68rem;color:var(--gold);margin-top:.1rem;text-align:right">${aCoach}</div>`:''}
           </div>
         </div>
@@ -1327,13 +1354,13 @@ function renderQS(){
             <div class="fix-round">📅 ${m.date?m.date:'Date TBC'}</div>
             <div class="fix-matchup">
               <div class="fix-team-side">
-                <div class="fix-team-name">🏠 ${m.homeName}</div>
-                <div class="fix-team-coach">${getTeamCoach(m.homeName)}</div>
+                <div class="fix-team-name">🏠 ${resolveMatchName(m,'home')}</div>
+                <div class="fix-team-coach">${resolveCoach(m,'home')}</div>
               </div>
               <div class="fix-vs-badge">VS</div>
               <div class="fix-away-side">
-                <div class="fix-team-name">${m.awayName} ✈️</div>
-                <div class="fix-team-coach">${getTeamCoach(m.awayName)}</div>
+                <div class="fix-team-name">${resolveMatchName(m,'away')} ✈️</div>
+                <div class="fix-team-coach">${resolveCoach(m,'away')}</div>
               </div>
             </div>
             <button class="fix-tap">⚡ TAP TO ENTER SCORE</button>
@@ -1426,10 +1453,10 @@ function openScore(mid){
   const tour=getTour();
   const m=tour.matches.find(x=>x.id===mid);
   if(!m||m.done||m.voided) return; // block voided matches
-  document.getElementById('smHome').textContent=m.homeName;
-  document.getElementById('smAway').textContent=m.awayName;
-  document.getElementById('smHomeCoach').textContent=getTeamCoach(m.homeName);
-  document.getElementById('smAwayCoach').textContent=getTeamCoach(m.awayName);
+  document.getElementById('smHome').textContent=resolveMatchName(m,'home');
+  document.getElementById('smAway').textContent=resolveMatchName(m,'away');
+  document.getElementById('smHomeCoach').textContent=resolveCoach(m,'home');
+  document.getElementById('smAwayCoach').textContent=resolveCoach(m,'away');
   document.getElementById('smRound').textContent=m.round;
   document.getElementById('smHnum').textContent='0';
   document.getElementById('smAnum').textContent='0';

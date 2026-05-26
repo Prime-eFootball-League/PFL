@@ -835,13 +835,15 @@ function renderResults(){
     rm.forEach(function(m){
       var homeWin=m.homeScore>m.awayScore;
       var awayWin=m.awayScore>m.homeScore;
-      var homeCoach=getCoach(m.homeName);
-      var awayCoach=getCoach(m.awayName);
+      var homeName=resolveTeamName(m,'home');
+      var awayName=resolveTeamName(m,'away');
+      var homeCoach=resolveCoach(m,'home');
+      var awayCoach=resolveCoach(m,'away');
       h+='<div class="r-item">'+
         '<div class="r-matchup">'+
         '<div class="r-home-side">'+
         '<div class="r-tname" style="'+(homeWin?'color:var(--green)':'')+'">'+
-        (homeWin?'🏆 ':'')+m.homeName+
+        (homeWin?'🏆 ':'')+homeName+
         '</div>'+
         (homeCoach?'<div class="r-tcoach">🧢 '+homeCoach+'</div>':'<div class="r-tcoach"></div>')+
         '</div>'+
@@ -851,7 +853,7 @@ function renderResults(){
         '</div>'+
         '<div class="r-away-side">'+
         '<div class="r-tname" style="'+(awayWin?'color:var(--green)':'')+'">'+
-        m.awayName+(awayWin?' 🏆':'')+
+        awayName+(awayWin?' 🏆':'')+
         '</div>'+
         (awayCoach?'<div class="r-tcoach">'+awayCoach+' 🧢</div>':'<div class="r-tcoach"></div>')+
         '</div>'+
@@ -875,12 +877,39 @@ function toggleRound(uid){
 }
 
 // ── FIXTURES ───────────────────────────────────────────────────
+// ── Resolve current team name from ID (fixes renamed teams showing old name) ──
+function resolveTeamName(m, side){
+  // side: 'home' or 'away'
+  var tour = getTour();
+  var id   = side === 'home' ? m.homeId : m.awayId;
+  var fallback = side === 'home' ? m.homeName : m.awayName;
+  if(tour && id){
+    var t = (tour.teams||[]).find(function(t){ return t.id === id; });
+    if(t) return t.name;
+  }
+  return fallback || '';
+}
+
+// ── Resolve coach by team ID first, then by name ──────────────
+function getCoachById(teamId){
+  if(!teamId) return null;
+  var reg = registryTeams.find(function(r){ return r.id === teamId; });
+  return reg && reg.coach ? reg.coach : null;
+}
+
 function getCoach(teamName){
   // Look up coach from registry by team name match
   var reg = registryTeams.find(function(r){
     return r.name.trim().toLowerCase() === (teamName||'').trim().toLowerCase();
   });
   return reg && reg.coach ? reg.coach : null;
+}
+
+// Resolve coach using ID when available, falling back to name
+function resolveCoach(m, side){
+  var id = side === 'home' ? m.homeId : m.awayId;
+  var name = side === 'home' ? m.homeName : m.awayName;
+  return getCoachById(id) || getCoach(resolveTeamName(m, side)) || getCoach(name) || null;
 }
 
 function buildFixCard(homeName, awayName, footerLeft, footerRight){
@@ -962,7 +991,7 @@ function renderFixtures(){
         '</button>'+
         '<div id="'+uid+'" style="display:'+(isFirst?'block':'none')+';overflow:hidden">';
       rm.forEach(function(m){
-        h+=buildFixCard(m.homeName, m.awayName, m.date||'📅 Date TBC', r);
+        h+=buildFixCard(resolveTeamName(m,'home'), resolveTeamName(m,'away'), m.date||'📅 Date TBC', r, m);
       });
       h+='</div></div>';
     });
