@@ -236,6 +236,12 @@ td.pts{font-family:'Anton',sans-serif;font-size:1.1rem;color:var(--gold);text-sh
         <input type="text" id="regName" placeholder="e.g. FC Prime United">
         <label class="lbl">Coach Name</label>
         <input type="text" id="regCoach" placeholder="Coach name">
+        <label class="lbl">Club Logo URL <span style="color:var(--muted);font-size:.6rem">(optional — paste image URL if not in auto-pack)</span></label>
+        <input type="url" id="regLogoUrl" placeholder="https://... (leave blank to use auto logo)">
+        <div id="regLogoPreview" style="display:none;margin-bottom:.8rem;text-align:center">
+          <img id="regLogoImg" src="" style="height:60px;object-fit:contain;border-radius:8px;background:var(--card2);padding:.4rem" onerror="document.getElementById('regLogoPreview').style.display='none'">
+        </div>
+        <script>document.getElementById('regLogoUrl').addEventListener('input',function(){var v=this.value.trim();var p=document.getElementById('regLogoPreview');var i=document.getElementById('regLogoImg');if(v){i.src=v;p.style.display='block';}else{p.style.display='none';}});</script>
         <div style="display:flex;gap:.7rem">
           <button class="btn-full btn-gold" onclick="saveRegistryTeam()">💾 SAVE TEAM</button>
           <button class="btn-full btn-outline" onclick="cancelRegistryForm()" style="flex:.4">Cancel</button>
@@ -2480,6 +2486,13 @@ function toggleRegistryForm(){
 function cancelRegistryForm(){
   editingRegId = null;
   document.getElementById('regFormWrap').style.display = 'none';
+  document.getElementById('regName').value = '';
+  document.getElementById('regCoach').value = '';
+  const logoInput = document.getElementById('regLogoUrl');
+  const logoPreview = document.getElementById('regLogoPreview');
+  if(logoInput) logoInput.value = '';
+  if(logoPreview) logoPreview.style.display = 'none';
+  document.getElementById('regFormTitle').textContent = '➕ New Team';
 }
 
 function editRegistryTeam(tid){
@@ -2489,6 +2502,14 @@ function editRegistryTeam(tid){
   document.getElementById('regFormTitle').textContent = '✏️ Edit Team';
   document.getElementById('regName').value = t.name || '';
   document.getElementById('regCoach').value = t.coach || '';
+  const logoInput = document.getElementById('regLogoUrl');
+  const logoPreview = document.getElementById('regLogoPreview');
+  const logoImg = document.getElementById('regLogoImg');
+  if(logoInput){
+    logoInput.value = t.logoUrl || '';
+    if(t.logoUrl){ logoImg.src=t.logoUrl; logoPreview.style.display='block'; }
+    else { logoPreview.style.display='none'; }
+  }
   document.getElementById('regFormWrap').style.display = 'block';
   document.getElementById('regFormWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
@@ -2496,16 +2517,17 @@ function editRegistryTeam(tid){
 function saveRegistryTeam(){
   const name = document.getElementById('regName').value.trim();
   const coach = document.getElementById('regCoach').value.trim();
-  const badge = '⚽'; // badge field removed, default to soccer ball
+  const logoUrlInput = document.getElementById('regLogoUrl');
+  const logoUrl = logoUrlInput ? logoUrlInput.value.trim() : '';
+  const badge = '⚽';
   if(!name){ toast('Team name is required', true); return; }
 
   if(editingRegId){
-    // Edit existing registry team
     const t = registryTeams.find(x => x.id === editingRegId);
     if(t){
       const oldName = t.name;
       t.name = name; t.coach = coach; t.badge = badge;
-      // Propagate name/coach change into all tournaments
+      if(logoUrl) t.logoUrl = logoUrl; else delete t.logoUrl;
       let tourChanged = false;
       db.tournaments.forEach(tour => {
         normalizeTour(tour);
@@ -2519,14 +2541,12 @@ function saveRegistryTeam(){
       });
       if(tourChanged){
         sdb();
-        // Re-sync each affected tournament to Firebase
         db.tournaments.forEach(tour => {
           if(window._fbSaveTour) window._fbSaveTour(tour.id, tour).catch(err => console.error('Tour sync failed:', err));
         });
       }
     }
   } else {
-    // Check duplicate name
     if(registryTeams.some(t => t.name.toLowerCase() === name.toLowerCase())){
       toast('A team with that name already exists', true); return;
     }
@@ -2535,11 +2555,11 @@ function saveRegistryTeam(){
       name, coach, badge,
       dateCreated: new Date().toISOString().slice(0,10)
     };
+    if(logoUrl) newTeam.logoUrl = logoUrl;
     registryTeams.push(newTeam);
   }
 
   saveRegistry();
-  // Sync to Firebase
   if(window._fbSaveRegTeam){
     const tid = editingRegId || registryTeams[registryTeams.length-1].id;
     const t = registryTeams.find(x => x.id === tid);
@@ -2574,21 +2594,25 @@ function renderRegistry(){
     return;
   }
   const sorted = registryTeams.slice().sort((a,b) => a.name.localeCompare(b.name));
-  el.innerHTML = sorted.map(t => `
-    <div class="t-card" style="cursor:default">
+  el.innerHTML = sorted.map(t => {
+    const logoSrc = t.logoUrl || null;
+    const logoHtml = logoSrc
+      ? `<img src="${logoSrc}" style="width:36px;height:36px;object-fit:contain;border-radius:4px" onerror="this.src='';">`
+      : `<span style="font-size:1.5rem">⚽</span>`;
+    return `<div class="t-card" style="cursor:default">
       <div style="display:flex;align-items:center;gap:.8rem;flex:1;min-width:0">
-        <div style="font-size:1.6rem;flex-shrink:0">${t.badge||'⚽'}</div>
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${logoHtml}</div>
         <div style="min-width:0">
           <div class="t-card-name">${t.name}</div>
-          <div class="t-card-meta">${t.coach ? '🧢 '+t.coach : 'No coach'} · Added ${t.dateCreated||'—'}</div>
+          <div class="t-card-meta">${t.coach ? '🧢 '+t.coach : 'No coach'} · Added ${t.dateCreated||'—'}${t.logoUrl?' · 🖼 Custom logo':' · 🔍 Auto logo'}</div>
         </div>
       </div>
       <div style="display:flex;gap:.5rem;flex-shrink:0">
         <button class="del-btn" style="border-color:var(--gold);color:var(--gold)" onclick="editRegistryTeam('${t.id}')">✏️</button>
         <button class="del-btn" onclick="deleteRegistryTeam('${t.id}')">🗑</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function initRegistrySync(){

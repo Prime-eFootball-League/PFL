@@ -473,6 +473,38 @@ tbody tr:hover td{background:var(--card2)!important;filter:none}
 .tour-stat-chv{font-size:.7rem;color:var(--muted);transition:color .2s}
 .tour-stat-body{display:none;padding:.7rem .8rem;background:var(--card)}
 
+/* ── MATCH SCHEDULE ── */
+.ms-section{margin-top:.9rem;border-top:1px solid var(--border);padding-top:.8rem}
+.ms-title{font-family:'Oswald',sans-serif;font-size:.68rem;font-weight:400;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.ms-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,.3),transparent)}
+.ms-match{display:flex;align-items:center;gap:.5rem;padding:.45rem .5rem;border-radius:7px;margin-bottom:.3rem;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);transition:background .15s}
+.ms-match:hover{background:rgba(201,168,76,.04)}
+.ms-match:last-child{margin-bottom:0}
+.ms-badge{flex-shrink:0;width:20px;height:20px;border-radius:4px;font-family:'Oswald',sans-serif;font-size:.6rem;font-weight:600;display:flex;align-items:center;justify-content:center;color:#000}
+.ms-badge.W{background:var(--green)}
+.ms-badge.D{background:var(--gold)}
+.ms-badge.L{background:var(--red)}
+.ms-badge.upcoming{background:var(--border);color:var(--muted);font-size:.55rem}
+.ms-teams{flex:1;min-width:0;font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-teams strong{color:var(--text);font-weight:700}
+.ms-score{font-family:'Oswald',sans-serif;font-size:.78rem;font-weight:600;color:var(--gold);flex-shrink:0;min-width:2rem;text-align:right}
+.ms-date{font-family:'Oswald',sans-serif;font-size:.58rem;color:var(--muted);flex-shrink:0;white-space:nowrap}
+/* ── PREDICTION BAR ── */
+.pred-wrap{margin-top:.7rem;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:.6rem .7rem}
+.pred-label{font-family:'Oswald',sans-serif;font-size:.6rem;font-weight:400;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:.45rem;text-align:center}
+.pred-teams-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem}
+.pred-team-name{font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:600;color:var(--text);max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pred-vs{font-family:'Oswald',sans-serif;font-size:.58rem;color:var(--muted)}
+.pred-bar-wrap{display:flex;height:9px;border-radius:5px;overflow:hidden;margin-bottom:.35rem}
+.pred-bar-w{background:var(--green);transition:width .5s}
+.pred-bar-d{background:var(--gold);transition:width .5s}
+.pred-bar-l{background:var(--red);transition:width .5s}
+.pred-pcts{display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;font-size:.63rem;font-weight:400}
+.pred-pct-w{color:var(--green)}
+.pred-pct-d{color:var(--gold)}
+.pred-pct-l{color:var(--red)}
+.pred-note{text-align:center;font-family:'DM Sans',sans-serif;font-size:.57rem;color:var(--muted);margin-top:.3rem;line-height:1.4}
+
 /* ── MISC ── */
 .empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.85rem;font-family:'Oswald',sans-serif;letter-spacing:1px}
 .empty-icon{font-size:2.5rem;margin-bottom:.7rem}
@@ -535,63 +567,6 @@ tbody tr:hover td{background:var(--card2)!important;filter:none}
   text-transform:uppercase;
 }
 .round-divider-pill.green{color:var(--green);background:rgba(0,232,122,.06);border-color:rgba(0,232,122,.25)}
-
-/* ── MATCH SCHEDULE ── */
-.ms-section{margin-top:.9rem;border-top:1px solid var(--border);padding-top:.8rem}
-.ms-title{
-  font-family:'Oswald',sans-serif;font-size:.68rem;font-weight:400;
-  letter-spacing:2px;color:var(--gold);text-transform:uppercase;
-  margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem;
-}
-.ms-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,.3),transparent)}
-.ms-match{
-  display:flex;align-items:center;gap:.5rem;
-  padding:.45rem .5rem;border-radius:7px;
-  margin-bottom:.3rem;
-  background:rgba(255,255,255,.02);
-  border:1px solid rgba(255,255,255,.04);
-  transition:background .15s;
-}
-.ms-match:hover{background:rgba(201,168,76,.04)}
-.ms-match:last-child{margin-bottom:0}
-.ms-badge{
-  flex-shrink:0;width:20px;height:20px;border-radius:4px;
-  font-family:'Oswald',sans-serif;font-size:.6rem;font-weight:600;
-  display:flex;align-items:center;justify-content:center;color:#000;
-}
-.ms-badge.W{background:var(--green)}
-.ms-badge.D{background:var(--gold)}
-.ms-badge.L{background:var(--red)}
-.ms-badge.upcoming{background:var(--border);color:var(--muted);font-size:.55rem}
-.ms-teams{flex:1;min-width:0;font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ms-teams strong{color:var(--text);font-weight:700}
-.ms-score{font-family:'Oswald',sans-serif;font-size:.78rem;font-weight:600;color:var(--gold);flex-shrink:0;min-width:2rem;text-align:right}
-.ms-date{font-family:'Oswald',sans-serif;font-size:.58rem;color:var(--muted);flex-shrink:0;white-space:nowrap}
-
-/* ── PREDICTION BAR ── */
-.pred-wrap{
-  margin-top:.9rem;border-top:1px solid var(--border);padding-top:.8rem;
-}
-.pred-label{
-  font-family:'Oswald',sans-serif;font-size:.62rem;font-weight:400;
-  letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;
-  margin-bottom:.5rem;text-align:center;
-}
-.pred-teams-row{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:.4rem;
-}
-.pred-team-name{font-family:'Oswald',sans-serif;font-size:.72rem;font-weight:600;color:var(--text);max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pred-vs{font-family:'Oswald',sans-serif;font-size:.6rem;color:var(--muted)}
-.pred-bar-wrap{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-bottom:.4rem}
-.pred-bar-w{background:var(--green);transition:width .5s}
-.pred-bar-d{background:var(--gold);transition:width .5s}
-.pred-bar-l{background:var(--red);transition:width .5s}
-.pred-pcts{display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;font-size:.65rem;font-weight:400}
-.pred-pct-w{color:var(--green)}
-.pred-pct-d{color:var(--gold)}
-.pred-pct-l{color:var(--red)}
-.pred-note{text-align:center;font-family:'DM Sans',sans-serif;font-size:.58rem;color:var(--muted);margin-top:.35rem;line-height:1.4}
 
 /* Smooth sections */
 #secTable,#secResults,#secFixtures,#secPlayoffs,#secGoals,#secTeams,#secRules,
@@ -812,9 +787,10 @@ function renderPublicRegistry(){
   var h='<div style="font-family:\'Anton\',sans-serif;font-size:1.2rem;letter-spacing:3px;color:var(--gold);text-align:center;margin-bottom:1rem;text-transform:uppercase">🏅 Registered Teams</div>';
   sorted.forEach(function(t){
     var safeId='reg_'+t.id.replace(/[^a-zA-Z0-9]/g,'_');
+    var logoHtml=logoImg(t.name,44,t);
     h+='<div class="reg-entry">'+
       '<div class="reg-card reg-card-tap" onclick="toggleRegCard(\''+safeId+'\',\''+t.id+'\')">'+
-      '<div class="reg-badge">'+(t.badge||'⚽')+'</div>'+
+      '<div class="reg-badge" style="background:none;border:none;padding:0;width:48px;height:48px;display:flex;align-items:center;justify-content:center">'+logoHtml+'</div>'+
       '<div style="min-width:0;flex:1">'+
       '<div class="reg-name">'+t.name+'</div>'+
       '<div class="reg-meta">'+(t.coach?'🧢 '+t.coach:'No coach listed')+' &middot; Since '+(t.dateCreated||'—')+'</div>'+
@@ -840,50 +816,121 @@ function toggleRegCard(safeId,regTeamId){
   panel.innerHTML=buildRegStats(regTeamId);
 }
 
-// ── Calculate form-based prediction between two teams ─────────
-function calcPrediction(teamA, teamB, tourMatches){
-  // Get all played matches for each team
-  function getResults(team){
-    var played=(tourMatches||[]).filter(function(m){
-      return m.done&&(m.homeId===team.id||m.awayId===team.id);
-    });
-    var w=0,d=0,l=0;
-    played.forEach(function(m){
-      var isHome=m.homeId===team.id;
-      var gf=isHome?m.homeScore:m.awayScore;
-      var ga=isHome?m.awayScore:m.homeScore;
-      if(gf>ga) w++;
-      else if(gf===ga) d++;
-      else l++;
-    });
-    return{w:w,d:d,l:l,total:played.length};
+// ── CLUB LOGO LOOKUP ──────────────────────────────────────────
+// Wikimedia Commons permanent URLs — never break
+var LOGO_PACK={
+  'al nassar':'https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/Al-Nassr_FC.svg/200px-Al-Nassr_FC.svg.png',
+  'arsenal':'https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Arsenal_FC.svg/200px-Arsenal_FC.svg.png',
+  'botafogo':'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Botafogo_de_Futebol_e_Regatas_logo.svg/200px-Botafogo_de_Futebol_e_Regatas_logo.svg.png',
+  'chelsea':'https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Chelsea_FC.svg/200px-Chelsea_FC.svg.png',
+  'como 1907':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/sixth/Como_1907.png/200px-Como_1907.png',
+  'como':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Como_1907_logo.svg/200px-Como_1907_logo.svg.png',
+  'corinthians':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/SC_Corinthians_Paulista.svg/200px-SC_Corinthians_Paulista.svg.png',
+  'dortmund':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/200px-Borussia_Dortmund_logo.svg.png',
+  'borussia dortmund':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/200px-Borussia_Dortmund_logo.svg.png',
+  'bvb':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/200px-Borussia_Dortmund_logo.svg.png',
+  'feyenoord':'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Feyenoord_Rotterdam_logo.svg/200px-Feyenoord_Rotterdam_logo.svg.png',
+  'fluminense':'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Fluminense_FC_logo.svg/200px-Fluminense_FC_logo.svg.png',
+  'fluminese':'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Fluminense_FC_logo.svg/200px-Fluminense_FC_logo.svg.png',
+  'galatasaray':'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Galatasaray_Sports_Club_Logo.svg/200px-Galatasaray_Sports_Club_Logo.svg.png',
+  'man city':'https://upload.wikimedia.org/wikipedia/en/thumb/e/eb/Manchester_City_FC_badge.svg/200px-Manchester_City_FC_badge.svg.png',
+  'manchester city':'https://upload.wikimedia.org/wikipedia/en/thumb/e/eb/Manchester_City_FC_badge.svg/200px-Manchester_City_FC_badge.svg.png',
+  'newcastle':'https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Newcastle_United_Logo.svg/200px-Newcastle_United_Logo.svg.png',
+  'newcastle united':'https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Newcastle_United_Logo.svg/200px-Newcastle_United_Logo.svg.png',
+  'real madrid':'https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/200px-Real_Madrid_CF.svg.png',
+  'crystal palace':'https://upload.wikimedia.org/wikipedia/en/thumb/a/a2/Crystal_Palace_FC_logo_%282022%29.svg/200px-Crystal_Palace_FC_logo_%282022%29.svg.png',
+  'fernabace sk':'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Fenerbah%C3%A7e_SK.svg/200px-Fenerbah%C3%A7e_SK.svg.png',
+  'fenerbahce':'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Fenerbah%C3%A7e_SK.svg/200px-Fenerbah%C3%A7e_SK.svg.png',
+  'lexington':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Lexington_Sporting_Club_logo.svg/200px-Lexington_Sporting_Club_logo.svg.png',
+  'liverpool':'https://upload.wikimedia.org/wikipedia/en/thumb/0/0c/Liverpool_FC.svg/200px-Liverpool_FC.svg.png',
+  'barcelona':'https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/200px-FC_Barcelona_%28crest%29.svg.png',
+  'fc barcelona':'https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/200px-FC_Barcelona_%28crest%29.svg.png',
+  'juventus':'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Juventus_FC_2017_icon_%28black%29.svg/200px-Juventus_FC_2017_icon_%28black%29.svg.png',
+  'ac milan':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Logo_of_AC_Milan.svg/200px-Logo_of_AC_Milan.svg.png',
+  'milan':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Logo_of_AC_Milan.svg/200px-Logo_of_AC_Milan.svg.png',
+  'inter milan':'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/FC_Internazionale_Milano_2021.svg/200px-FC_Internazionale_Milano_2021.svg.png',
+  'inter':'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/FC_Internazionale_Milano_2021.svg/200px-FC_Internazionale_Milano_2021.svg.png',
+  'psg':'https://upload.wikimedia.org/wikipedia/en/thumb/a/a7/Paris_Saint-Germain_F.C..svg/200px-Paris_Saint-Germain_F.C..svg.png',
+  'paris saint-germain':'https://upload.wikimedia.org/wikipedia/en/thumb/a/a7/Paris_Saint-Germain_F.C..svg/200px-Paris_Saint-Germain_F.C..svg.png',
+  'bayern':'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282002%E2%80%932017%29.svg/200px-FC_Bayern_M%C3%BCnchen_logo_%282002%E2%80%932017%29.svg.png',
+  'bayern munich':'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282002%E2%80%932017%29.svg/200px-FC_Bayern_M%C3%BCnchen_logo_%282002%E2%80%932017%29.svg.png',
+  'manchester united':'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/200px-Manchester_United_FC_crest.svg.png',
+  'man united':'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/200px-Manchester_United_FC_crest.svg.png',
+  'tottenham':'https://upload.wikimedia.org/wikipedia/en/thumb/b/b4/Tottenham_Hotspur.svg/200px-Tottenham_Hotspur.svg.png',
+  'spurs':'https://upload.wikimedia.org/wikipedia/en/thumb/b/b4/Tottenham_Hotspur.svg/200px-Tottenham_Hotspur.svg.png',
+  'atletico madrid':'https://upload.wikimedia.org/wikipedia/en/thumb/f/f4/Atletico_de_madrid_2017_logo.svg/200px-Atletico_de_madrid_2017_logo.svg.png',
+  'atletico':'https://upload.wikimedia.org/wikipedia/en/thumb/f/f4/Atletico_de_madrid_2017_logo.svg/200px-Atletico_de_madrid_2017_logo.svg.png',
+  'sevilla':'https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/Sevilla_FC_logo.svg/200px-Sevilla_FC_logo.svg.png',
+  'ajax':'https://upload.wikimedia.org/wikipedia/en/thumb/7/79/Ajax_Amsterdam.svg/200px-Ajax_Amsterdam.svg.png',
+  'porto':'https://upload.wikimedia.org/wikipedia/en/thumb/f/f1/FC_Porto.svg/200px-FC_Porto.svg.png',
+  'benfica':'https://upload.wikimedia.org/wikipedia/en/thumb/a/a2/SL_Benfica_logo.svg/200px-SL_Benfica_logo.svg.png',
+  'celtic':'https://upload.wikimedia.org/wikipedia/en/thumb/9/90/Celtic_FC.svg/200px-Celtic_FC.svg.png',
+  'rangers':'https://upload.wikimedia.org/wikipedia/en/thumb/f/f6/Rangers_FC.png/200px-Rangers_FC.png',
+  'flamengo':'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flamengo_braz_logo.svg/200px-Flamengo_braz_logo.svg.png',
+  'boca juniors':'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Club_Atletico_Boca_Juniors.svg/200px-Club_Atletico_Boca_Juniors.svg.png',
+  'river plate':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Escudo_del_Club_Atl%C3%A9tico_River_Plate.svg/200px-Escudo_del_Club_Atl%C3%A9tico_River_Plate.svg.png',
+  'santos':'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Santos_logo.svg/200px-Santos_logo.svg.png',
+  'sao paulo':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Escudo_do_S%C3%A3o_Paulo_Futebol_Clube.svg/200px-Escudo_do_S%C3%A3o_Paulo_Futebol_Clube.svg.png',
+  'palmeiras':'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Palmeiras_logo.svg/200px-Palmeiras_logo.svg.png',
+  'atletico mineiro':'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Atletico_mineiro_galo.svg/200px-Atletico_mineiro_galo.svg.png'
+};
+
+function getLogoUrl(team){
+  // team can be a registry team object (has logoUrl field) or a name string
+  var name=typeof team==='string'?team:(team.name||'');
+  // 1. Custom URL stored in registry takes priority
+  if(typeof team==='object'&&team.logoUrl) return team.logoUrl;
+  // 2. Try pack lookup by name (case-insensitive)
+  var key=name.trim().toLowerCase();
+  if(LOGO_PACK[key]) return LOGO_PACK[key];
+  // 3. Partial match — check if any key is contained in the name
+  var keys=Object.keys(LOGO_PACK);
+  for(var i=0;i<keys.length;i++){
+    if(key.indexOf(keys[i])!==-1||keys[i].indexOf(key)!==-1) return LOGO_PACK[keys[i]];
   }
-  var rA=getResults(teamA);
-  var rB=getResults(teamB);
-  // If neither has played, no prediction
-  if(rA.total===0&&rB.total===0) return null;
-  // Win rate as a score (0–1). Teams with 0 played get neutral 0.33
+  return null;
+}
+
+function logoImg(name,size,regTeam){
+  // regTeam optional — registry team object for custom logoUrl
+  var src=regTeam?getLogoUrl(regTeam):getLogoUrl(name);
+  if(src){
+    return '<img src="'+src+'" alt="'+name+'" style="width:'+size+'px;height:'+size+'px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+      +'<span style="display:none;width:'+size+'px;height:'+size+'px;border-radius:50%;background:var(--card2);border:1px solid var(--border);align-items:center;justify-content:center;font-size:'+(size*0.45)+'px;flex-shrink:0">\u26bd</span>';
+  }
+  return '<span style="display:flex;width:'+size+'px;height:'+size+'px;border-radius:50%;background:var(--card2);border:1px solid var(--border);align-items:center;justify-content:center;font-size:'+(size*0.45)+'px;flex-shrink:0">\u26bd</span>';
+}
+
+function getRegTeamByName(name){
+  if(!name) return null;
+  var n=name.trim().toLowerCase();
+  return registryTeams.find(function(r){return r.name.trim().toLowerCase()===n;})||null;
+}
+
+function calcPrediction(teamA,teamB,tourMatches){
+  function getRes(team){
+    var pl=(tourMatches||[]).filter(function(m){return m.done&&(m.homeId===team.id||m.awayId===team.id);});
+    var w=0,d=0,l=0;
+    pl.forEach(function(m){
+      var ih=m.homeId===team.id;
+      var gf=ih?m.homeScore:m.awayScore;
+      var ga=ih?m.awayScore:m.homeScore;
+      if(gf>ga)w++;else if(gf===ga)d++;else l++;
+    });
+    return{w:w,d:d,l:l,total:pl.length};
+  }
+  var rA=getRes(teamA),rB=getRes(teamB);
+  if(rA.total===0&&rB.total===0)return null;
   var wA=rA.total>0?rA.w/rA.total:0.33;
   var dA=rA.total>0?rA.d/rA.total:0.33;
   var lA=rA.total>0?rA.l/rA.total:0.33;
   var wB=rB.total>0?rB.w/rB.total:0.33;
   var dB=rB.total>0?rB.d/rB.total:0.33;
   var lB=rB.total>0?rB.l/rB.total:0.33;
-  // A wins when A's win rate is high and B's loss rate is high
-  var raw_w=(wA+lB)/2;
-  // Draw when both draw rates are high
-  var raw_d=(dA+dB)/2;
-  // B wins when B's win rate is high and A's loss rate is high
-  var raw_l=(wB+lA)/2;
-  // Normalise to 100%
-  var total=raw_w+raw_d+raw_l;
-  var pW=Math.round((raw_w/total)*100);
-  var pD=Math.round((raw_d/total)*100);
-  var pL=100-pW-pD;
-  return{
-    pW:pW,pD:pD,pL:pL,
-    playedA:rA.total,playedB:rB.total
-  };
+  var rw=(wA+lB)/2,rd=(dA+dB)/2,rl=(wB+lA)/2;
+  var tot=rw+rd+rl;
+  var pW=Math.round((rw/tot)*100),pD=Math.round((rd/tot)*100),pL=100-pW-pD;
+  return{pW:pW,pD:pD,pL:pL,playedA:rA.total,playedB:rB.total};
 }
 
 function buildRegStats(regTeamId){
@@ -896,7 +943,6 @@ function buildRegStats(regTeamId){
   var h='<div>';
   if(!appearances.length){h+='<div style="text-align:center;padding:.6rem 0;color:var(--muted);font-size:.8rem;font-family:\'Oswald\',sans-serif;letter-spacing:1px">No tournament data yet</div></div>';return h;}
   h+='<div style="font-family:\'Oswald\',sans-serif;font-size:.7rem;color:var(--muted);margin-bottom:.7rem;letter-spacing:1px">Appeared in <strong style="color:var(--gold)">'+appearances.length+'</strong> tournament'+(appearances.length>1?'s':'')+'</div>';
-
   appearances.forEach(function(tour,idx){
     var tourTeam=(tour.teams||[]).find(function(tm){return tm.name.trim().toLowerCase()===teamName;});
     if(!tourTeam) return;
@@ -910,9 +956,9 @@ function buildRegStats(regTeamId){
     var formSq='';
     if(playedM.length){
       playedM.forEach(function(m){
-        var isHome=m.homeId===tourTeam.id;
-        var gf=isHome?m.homeScore:m.awayScore;
-        var ga=isHome?m.awayScore:m.homeScore;
+        var ih=m.homeId===tourTeam.id;
+        var gf=ih?m.homeScore:m.awayScore;
+        var ga=ih?m.awayScore:m.homeScore;
         var res=gf>ga?'W':gf===ga?'D':'L';
         formSq+='<div class="form-sq '+res+'">'+res+'</div>';
       });
@@ -921,85 +967,53 @@ function buildRegStats(regTeamId){
     var gdStr=(gd>=0?'+':'')+gd;
     var gdColor=gd>0?'var(--green)':gd<0?'var(--red)':'var(--text)';
     var winRate=(tourTeam.played||0)>0?Math.round(((tourTeam.won||0)/(tourTeam.played||1))*100):0;
-
-    // ── Build match schedule HTML ──
     var upcomingM=allMatches.filter(function(m){return!m.done&&!m.voided&&(m.homeId===tourTeam.id||m.awayId===tourTeam.id);});
-    var scheduleHtml='';
-
-    // Past matches
+    var schedHtml='';
     if(playedM.length){
-      scheduleHtml+='<div class="ms-title">Past Matches</div>';
+      schedHtml+='<div class="ms-title">Past Matches</div>';
       playedM.forEach(function(m){
-        var isHome=m.homeId===tourTeam.id;
-        var oppId=isHome?m.awayId:m.homeId;
+        var ih=m.homeId===tourTeam.id;
+        var oppId=ih?m.awayId:m.homeId;
         var oppTeam=(tour.teams||[]).find(function(t){return t.id===oppId;});
-        var oppName=oppTeam?oppTeam.name:(isHome?m.awayName:m.homeName)||'Unknown';
-        var gf=isHome?m.homeScore:m.awayScore;
-        var ga=isHome?m.awayScore:m.homeScore;
+        var oppName=oppTeam?oppTeam.name:(ih?m.awayName:m.homeName)||'Unknown';
+        var gf=ih?m.homeScore:m.awayScore;
+        var ga=ih?m.awayScore:m.homeScore;
         var res=gf>ga?'W':gf===ga?'D':'L';
-        var scoreStr=isHome?m.homeScore+' – '+m.awayScore:m.awayScore+' – '+m.homeScore;
-        scheduleHtml+='<div class="ms-match">'+
-          '<div class="ms-badge '+res+'">'+res+'</div>'+
-          '<div class="ms-teams">vs <strong>'+oppName+'</strong></div>'+
-          '<div class="ms-score">'+scoreStr+'</div>'+
-          (m.date?'<div class="ms-date">'+m.date+'</div>':'')+
-          '</div>';
+        var sc=ih?m.homeScore+' \u2013 '+m.awayScore:m.awayScore+' \u2013 '+m.homeScore;
+        schedHtml+='<div class="ms-match"><div class="ms-badge '+res+'">'+res+'</div><div class="ms-teams">vs <strong>'+oppName+'</strong></div><div class="ms-score">'+sc+'</div>'+(m.date?'<div class="ms-date">'+m.date+'</div>':'')+'</div>';
       });
     }
-
-    // Upcoming matches + prediction
     if(upcomingM.length){
-      scheduleHtml+='<div class="ms-title" style="margin-top:.7rem">Upcoming</div>';
-      upcomingM.forEach(function(m){
-        var isHome=m.homeId===tourTeam.id;
-        var oppId=isHome?m.awayId:m.homeId;
+      schedHtml+='<div class="ms-title" style="margin-top:.7rem">Upcoming</div>';
+      upcomingM.forEach(function(m,mi){
+        var ih=m.homeId===tourTeam.id;
+        var oppId=ih?m.awayId:m.homeId;
         var oppTeam=(tour.teams||[]).find(function(t){return t.id===oppId;});
-        var oppName=oppTeam?oppTeam.name:(isHome?m.awayName:m.homeName)||'Unknown';
-        scheduleHtml+='<div class="ms-match">'+
-          '<div class="ms-badge upcoming">VS</div>'+
-          '<div class="ms-teams">vs <strong>'+oppName+'</strong>'+(isHome?' <span style="font-size:.55rem;color:var(--muted)">(H)</span>':' <span style="font-size:.55rem;color:var(--muted)">(A)</span>')+'</div>'+
-          (m.round?'<div class="ms-date">'+m.round+'</div>':'')+(m.date&&!m.round?'<div class="ms-date">'+m.date+'</div>':'')+
-          '</div>';
-
-        // Prediction for this upcoming match
-        if(tour.showPredictions&&oppTeam){
+        var oppName=oppTeam?oppTeam.name:(ih?m.awayName:m.homeName)||'Unknown';
+        var venueLabel=ih?' <span style="font-size:.55rem;color:var(--muted)">(H)</span>':' <span style="font-size:.55rem;color:var(--muted)">(A)</span>';
+        schedHtml+='<div class="ms-match"><div class="ms-badge upcoming">VS</div><div class="ms-teams">vs <strong>'+oppName+'</strong>'+venueLabel+'</div>'+(m.round?'<div class="ms-date">'+m.round+'</div>':'')+'</div>';
+        // Prediction only for the NEXT match (first upcoming)
+        if(mi===0&&tour.showPredictions&&oppTeam){
           var pred=calcPrediction(tourTeam,oppTeam,allMatches);
           if(pred){
-            var homeTeamName=isHome?tourTeam.name:oppTeam.name;
-            var awayTeamName=isHome?oppTeam.name:tourTeam.name;
-            // pW = this team wins, pL = opp wins — adjust labels based on home/away view
-            var labelW=isHome?tourTeam.name:oppTeam.name;
-            var labelL=isHome?oppTeam.name:tourTeam.name;
-            var pW=isHome?pred.pW:pred.pL;
-            var pL=isHome?pred.pL:pred.pW;
-            scheduleHtml+='<div class="pred-wrap">'+
-              '<div class="pred-label">⚡ Prediction — based on both teams\' played results</div>'+
-              '<div class="pred-teams-row">'+
-              '<div class="pred-team-name">'+homeTeamName+'</div>'+
-              '<div class="pred-vs">vs</div>'+
-              '<div class="pred-team-name" style="text-align:right">'+awayTeamName+'</div>'+
-              '</div>'+
-              '<div class="pred-bar-wrap">'+
-              '<div class="pred-bar-w" style="width:'+pW+'%"></div>'+
-              '<div class="pred-bar-d" style="width:'+pred.pD+'%"></div>'+
-              '<div class="pred-bar-l" style="width:'+pL+'%"></div>'+
-              '</div>'+
-              '<div class="pred-pcts">'+
-              '<span class="pred-pct-w">'+pW+'% Win</span>'+
-              '<span class="pred-pct-d">'+pred.pD+'% Draw</span>'+
-              '<span class="pred-pct-l">'+pL+'% Win</span>'+
-              '</div>'+
-              '<div class="pred-note">Based on '+pred.playedA+' match'+(pred.playedA!==1?'es':'')+'  ('+tourTeam.name+') &amp; '+pred.playedB+' match'+(pred.playedB!==1?'es':'')+'  ('+oppTeam.name+')</div>'+
+            var hName=ih?tourTeam.name:oppTeam.name;
+            var aName=ih?oppTeam.name:tourTeam.name;
+            var pW=ih?pred.pW:pred.pL;
+            var pL=ih?pred.pL:pred.pW;
+            schedHtml+='<div class="pred-wrap">'+
+              '<div class="pred-label">\u26a1 Next Match Prediction \u2014 based on both teams\u2019 played results</div>'+
+              '<div class="pred-teams-row"><div class="pred-team-name">'+hName+'</div><div class="pred-vs">vs</div><div class="pred-team-name" style="text-align:right">'+aName+'</div></div>'+
+              '<div class="pred-bar-wrap"><div class="pred-bar-w" style="width:'+pW+'%"></div><div class="pred-bar-d" style="width:'+pred.pD+'%"></div><div class="pred-bar-l" style="width:'+pL+'%"></div></div>'+
+              '<div class="pred-pcts"><span class="pred-pct-w">'+pW+'% Win</span><span class="pred-pct-d">'+pred.pD+'% Draw</span><span class="pred-pct-l">'+pL+'% Win</span></div>'+
+              '<div class="pred-note">Based on '+pred.playedA+' match'+(pred.playedA!==1?'es':'')+' ('+tourTeam.name+') &amp; '+pred.playedB+' match'+(pred.playedB!==1?'es':'')+' ('+oppTeam.name+')</div>'+
               '</div>';
           }
         }
       });
     }
-
     if(!playedM.length&&!upcomingM.length){
-      scheduleHtml='<div style="text-align:center;padding:.5rem 0;color:var(--muted);font-family:\'Oswald\',sans-serif;font-size:.65rem;letter-spacing:1px">No matches scheduled yet</div>';
+      schedHtml='<div style="text-align:center;padding:.5rem 0;color:var(--muted);font-family:\'Oswald\',sans-serif;font-size:.65rem;letter-spacing:1px">No matches scheduled yet</div>';
     }
-
     h+='<div class="tour-stat-row">'+
       '<div class="tour-stat-header" onclick="toggleTourStatRow(\''+rowId+'\')">'+
       '<div>'+
@@ -1008,11 +1022,10 @@ function buildRegStats(regTeamId){
       '</div>'+
       '<div style="display:flex;align-items:center;gap:.6rem">'+
       '<span class="tour-stat-pts">'+posLabel+' &middot; '+(tourTeam.points||0)+'pts</span>'+
-      '<span class="tour-stat-chv" id="chv_'+rowId+'">▼</span>'+
+      '<span class="tour-stat-chv" id="chv_'+rowId+'">&#9660;</span>'+
       '</div>'+
       '</div>'+
       '<div class="tour-stat-body" id="'+rowId+'">'+
-      // ── Stats grid ──
       '<div class="team-stats-grid" style="border-radius:6px;overflow:hidden;margin-bottom:.7rem">'+
       '<div class="stat-cell"><div class="stat-val">'+(tourTeam.played||0)+'</div><div class="stat-lbl">Played</div></div>'+
       '<div class="stat-cell"><div class="stat-val" style="color:var(--green)">'+(tourTeam.won||0)+'</div><div class="stat-lbl">Won</div></div>'+
@@ -1023,7 +1036,6 @@ function buildRegStats(regTeamId){
       '<div class="stat-cell"><div class="stat-val" style="color:'+gdColor+'">'+gdStr+'</div><div class="stat-lbl">GD</div></div>'+
       '<div class="stat-cell"><div class="stat-val" style="color:var(--gold);font-size:1.5rem">'+(tourTeam.points||0)+'</div><div class="stat-lbl">Pts</div></div>'+
       '</div>'+
-      // ── Form ──
       '<div class="form-row" style="margin-bottom:.6rem">'+
       '<span class="form-label">Form</span>'+
       '<div class="form-squares" style="flex-wrap:wrap;gap:.3rem">'+formSq+'</div>'+
@@ -1032,8 +1044,7 @@ function buildRegStats(regTeamId){
       '<div class="extra-stat-item"><span class="extra-stat-lbl">Win Rate</span><span class="extra-stat-val">'+winRate+'%</span></div>'+
       '<div class="extra-stat-item"><span class="extra-stat-lbl">Points</span><span class="extra-stat-val" style="color:var(--gold)">'+(tourTeam.points||0)+'</span></div>'+
       '</div>'+
-      // ── Match schedule ──
-      '<div class="ms-section">'+scheduleHtml+'</div>'+
+      '<div class="ms-section">'+schedHtml+'</div>'+
       '</div>'+
       '</div>';
   });
@@ -1215,9 +1226,10 @@ function buildTable(tour,teams){
     var pos=i+1,gd=t.goalsFor-t.goalsAgainst;
     var zone=pos<=adv?'z-q':'z-e';
     var topBorder=i===adv?'border-top:1.5px dashed rgba(255,255,255,.1)':'';
+    var regT=getRegTeamByName(t.name);
     h+='<tr class="'+zone+'" style="'+topBorder+'">'+
       '<td><strong style="font-family:\'Oswald\',sans-serif;font-size:.9rem;color:var(--gold)">'+pos+'</strong></td>'+
-      '<td><strong style="font-family:\'DM Sans\',sans-serif;font-weight:700">'+t.name+'</strong></td>'+
+      '<td><div style="display:flex;align-items:center;gap:.5rem">'+logoImg(t.name,22,regT)+'<strong style="font-family:\'DM Sans\',sans-serif;font-weight:700">'+t.name+'</strong></div></td>'+
       '<td class="num">'+t.played+'</td>'+
       '<td class="num" style="color:var(--green)">'+t.won+'</td>'+
       '<td class="num">'+t.drawn+'</td>'+
@@ -1271,11 +1283,14 @@ function renderResults(){
       var awayName=resolveTeamName(m,'away');
       var homeCoach=resolveCoach(m,'home');
       var awayCoach=resolveCoach(m,'away');
+      var homeReg=getRegTeamByName(homeName);
+      var awayReg=getRegTeamByName(awayName);
       h+='<div class="r-item">'+
         '<div class="r-matchup">'+
         '<div class="r-home-side">'+
+        '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem">'+logoImg(homeName,24,homeReg)+
         '<div class="r-tname" style="'+(homeWin?'color:var(--gold)':'')+'">'+
-        (homeWin?'🏆 ':'')+homeName+'</div>'+
+        (homeWin?'🏆 ':'')+homeName+'</div></div>'+
         (homeCoach?'<div class="r-tcoach">🧢 '+homeCoach+'</div>':'<div class="r-tcoach"></div>')+
         '</div>'+
         '<div class="r-score-badge">'+
@@ -1283,8 +1298,9 @@ function renderResults(){
         (m.date?'<div class="r-meta">'+m.date+'</div>':'<div class="r-meta">Final</div>')+
         '</div>'+
         '<div class="r-away-side">'+
-        '<div class="r-tname" style="'+(awayWin?'color:var(--gold)':'')+'">'+
-        awayName+(awayWin?' 🏆':'')+'</div>'+
+        '<div style="display:flex;align-items:center;justify-content:flex-end;gap:.4rem;margin-bottom:.2rem">'+
+        '<div class="r-tname" style="'+(awayWin?'color:var(--gold)':'')+'">'+awayName+(awayWin?' 🏆':'')+'</div>'+
+        logoImg(awayName,24,awayReg)+'</div>'+
         (awayCoach?'<div class="r-tcoach">'+awayCoach+' 🧢</div>':'<div class="r-tcoach"></div>')+
         '</div>'+
         '</div>'+
@@ -1329,15 +1345,19 @@ function resolveCoach(m,side){
 function buildFixCard(homeName,awayName,footerLeft,footerRight){
   var homeCoach=getCoach(homeName);
   var awayCoach=getCoach(awayName);
+  var homeReg=getRegTeamByName(homeName);
+  var awayReg=getRegTeamByName(awayName);
   return '<div class="fix-item">'+
     '<div class="fix-header">'+
     '<div class="fix-team-side fix-home">'+
-    '<div class="fix-team-name">'+homeName+'</div>'+
+    '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.15rem">'+logoImg(homeName,26,homeReg)+
+    '<div class="fix-team-name">'+homeName+'</div></div>'+
     (homeCoach?'<div class="fix-team-coach">🧢 '+homeCoach+'</div>':'<div class="fix-team-coach" style="opacity:0">–</div>')+
     '</div>'+
     '<div class="fix-vs-badge">VS</div>'+
     '<div class="fix-team-side fix-away">'+
-    '<div class="fix-team-name">'+awayName+'</div>'+
+    '<div style="display:flex;align-items:center;justify-content:flex-end;gap:.4rem;margin-bottom:.15rem">'+
+    '<div class="fix-team-name">'+awayName+'</div>'+logoImg(awayName,26,awayReg)+'</div>'+
     (awayCoach?'<div class="fix-team-coach">'+awayCoach+' 🧢</div>':'<div class="fix-team-coach" style="opacity:0">–</div>')+
     '</div>'+
     '</div>'+
