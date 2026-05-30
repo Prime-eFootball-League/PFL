@@ -875,15 +875,18 @@ var LOGO_PACK={
   'atletico mineiro':'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Atletico_mineiro_galo.svg/200px-Atletico_mineiro_galo.svg.png'
 };
 
+var GITHUB_LOGOS_BASE='https://prime-efootball-league.github.io/Pfl-logo/';
+
 function getLogoUrl(team){
-  // team can be a registry team object (has logoUrl field) or a name string
   var name=typeof team==='string'?team:(team.name||'');
-  // 1. Custom URL stored in registry takes priority
+  // 1. GitHub filename stored in registry — highest priority
+  if(typeof team==='object'&&team.logoFilename) return GITHUB_LOGOS_BASE+team.logoFilename;
+  // 2. Legacy custom URL stored in registry
   if(typeof team==='object'&&team.logoUrl) return team.logoUrl;
-  // 2. Try pack lookup by name (case-insensitive)
+  // 3. Auto-pack lookup by name
   var key=name.trim().toLowerCase();
   if(LOGO_PACK[key]) return LOGO_PACK[key];
-  // 3. Partial match — check if any key is contained in the name
+  // 4. Partial match
   var keys=Object.keys(LOGO_PACK);
   for(var i=0;i<keys.length;i++){
     if(key.indexOf(keys[i])!==-1||keys[i].indexOf(key)!==-1) return LOGO_PACK[keys[i]];

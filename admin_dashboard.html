@@ -236,12 +236,20 @@ td.pts{font-family:'Anton',sans-serif;font-size:1.1rem;color:var(--gold);text-sh
         <input type="text" id="regName" placeholder="e.g. FC Prime United">
         <label class="lbl">Coach Name</label>
         <input type="text" id="regCoach" placeholder="Coach name">
-        <label class="lbl">Club Logo URL <span style="color:var(--muted);font-size:.6rem">(optional — paste image URL if not in auto-pack)</span></label>
-        <input type="url" id="regLogoUrl" placeholder="https://... (leave blank to use auto logo)">
-        <div id="regLogoPreview" style="display:none;margin-bottom:.8rem;text-align:center">
-          <img id="regLogoImg" src="" style="height:60px;object-fit:contain;border-radius:8px;background:var(--card2);padding:.4rem" onerror="document.getElementById('regLogoPreview').style.display='none'">
+        <label class="lbl">Club Logo <span style="color:var(--muted);font-size:.58rem">(search by team name)</span></label>
+        <div style="position:relative;margin-bottom:.5rem">
+          <input type="text" id="regLogoSearch" placeholder="Search e.g. Arsenal, Real Madrid..." style="margin-bottom:.3rem" oninput="logoSearch(this.value)" autocomplete="off">
+          <div id="logoSearchResults" style="display:none;background:var(--card2);border:1px solid var(--border);border-radius:8px;max-height:260px;overflow-y:auto;margin-bottom:.5rem"></div>
         </div>
-        <script>document.getElementById('regLogoUrl').addEventListener('input',function(){var v=this.value.trim();var p=document.getElementById('regLogoPreview');var i=document.getElementById('regLogoImg');if(v){i.src=v;p.style.display='block';}else{p.style.display='none';}});</script>
+        <div id="regLogoPreview" style="display:none;margin-bottom:.8rem;background:var(--card2);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:.7rem;display:flex;align-items:center;gap:.8rem">
+          <img id="regLogoImg" src="" style="width:48px;height:48px;object-fit:contain;flex-shrink:0" onerror="this.style.opacity='.3'">
+          <div style="min-width:0">
+            <div id="regLogoSelectedName" style="font-family:'Anton',sans-serif;font-size:.95rem;color:var(--gold);letter-spacing:1px"></div>
+            <div id="regLogoSelectedLeague" style="font-family:'Oswald',sans-serif;font-size:.62rem;color:var(--muted);letter-spacing:.5px;margin-top:.1rem"></div>
+          </div>
+          <button onclick="clearLogoSelection()" style="margin-left:auto;background:none;border:none;color:var(--red);font-size:1rem;cursor:pointer;flex-shrink:0">✕</button>
+        </div>
+        <input type="hidden" id="regLogoFilename">
         <div style="display:flex;gap:.7rem">
           <button class="btn-full btn-gold" onclick="saveRegistryTeam()">💾 SAVE TEAM</button>
           <button class="btn-full btn-outline" onclick="cancelRegistryForm()" style="flex:.4">Cancel</button>
@@ -2488,12 +2496,188 @@ function cancelRegistryForm(){
   document.getElementById('regFormWrap').style.display = 'none';
   document.getElementById('regName').value = '';
   document.getElementById('regCoach').value = '';
-  const logoInput = document.getElementById('regLogoUrl');
-  const logoPreview = document.getElementById('regLogoPreview');
-  if(logoInput) logoInput.value = '';
-  if(logoPreview) logoPreview.style.display = 'none';
+  const fn = document.getElementById('regLogoFilename');
+  const sb = document.getElementById('regLogoSearch');
+  const preview = document.getElementById('regLogoPreview');
+  const res = document.getElementById('logoSearchResults');
+  if(fn) fn.value = '';
+  if(sb) sb.value = '';
+  if(preview) preview.style.display = 'none';
+  if(res) res.style.display = 'none';
   document.getElementById('regFormTitle').textContent = '➕ New Team';
 }
+
+const GITHUB_LOGOS_BASE = 'https://prime-efootball-league.github.io/Pfl-logo/';
+
+var CLUB_DIRECTORY=[
+  {s:"arsenal",n:"Arsenal",l:"Premier League"},{s:"aston-villa",n:"Aston Villa",l:"Premier League"},
+  {s:"bournemouth",n:"Bournemouth",l:"Premier League"},{s:"brentford",n:"Brentford",l:"Premier League"},
+  {s:"brighton",n:"Brighton",l:"Premier League"},{s:"chelsea",n:"Chelsea",l:"Premier League"},
+  {s:"crystal-palace",n:"Crystal Palace",l:"Premier League"},{s:"everton",n:"Everton",l:"Premier League"},
+  {s:"fulham",n:"Fulham",l:"Premier League"},{s:"ipswich",n:"Ipswich Town",l:"Premier League"},
+  {s:"leeds-united",n:"Leeds United",l:"Premier League"},{s:"liverpool",n:"Liverpool",l:"Premier League"},
+  {s:"manchester-city",n:"Manchester City",l:"Premier League"},{s:"man-city",n:"Man City",l:"Premier League"},
+  {s:"manchester-united",n:"Manchester United",l:"Premier League"},{s:"newcastle",n:"Newcastle United",l:"Premier League"},
+  {s:"nottingham-forest",n:"Nottingham Forest",l:"Premier League"},{s:"sunderland",n:"Sunderland",l:"Premier League"},
+  {s:"tottenham",n:"Tottenham Hotspur",l:"Premier League"},{s:"coventry-city",n:"Coventry City",l:"Premier League"},
+  {s:"hull-city",n:"Hull City",l:"Premier League"},
+  {s:"athletic-club",n:"Athletic Club",l:"La Liga"},{s:"atletico-madrid",n:"Atletico Madrid",l:"La Liga"},
+  {s:"barcelona",n:"Barcelona",l:"La Liga"},{s:"celta",n:"Celta Vigo",l:"La Liga"},
+  {s:"deportivo",n:"Deportivo",l:"La Liga"},{s:"elche",n:"Elche",l:"La Liga"},
+  {s:"espanyol",n:"Espanyol",l:"La Liga"},{s:"getafe",n:"Getafe",l:"La Liga"},
+  {s:"girona",n:"Girona",l:"La Liga"},{s:"levante",n:"Levante",l:"La Liga"},
+  {s:"mallorca",n:"Mallorca",l:"La Liga"},{s:"osasuna",n:"Osasuna",l:"La Liga"},
+  {s:"oviedo",n:"Oviedo",l:"La Liga"},{s:"rayo-vallecano",n:"Rayo Vallecano",l:"La Liga"},
+  {s:"real-betis",n:"Real Betis",l:"La Liga"},{s:"real-madrid",n:"Real Madrid",l:"La Liga"},
+  {s:"real-sociedad",n:"Real Sociedad",l:"La Liga"},{s:"sevilla",n:"Sevilla",l:"La Liga"},
+  {s:"valencia",n:"Valencia",l:"La Liga"},{s:"villarreal",n:"Villarreal",l:"La Liga"},
+  {s:"atalanta",n:"Atalanta",l:"Serie A"},{s:"bologna",n:"Bologna",l:"Serie A"},
+  {s:"cagliari",n:"Cagliari",l:"Serie A"},{s:"como-1907",n:"Como 1907",l:"Serie A"},
+  {s:"cremonese",n:"Cremonese",l:"Serie A"},{s:"fiorentina",n:"Fiorentina",l:"Serie A"},
+  {s:"genoa",n:"Genoa",l:"Serie A"},{s:"inter",n:"Inter Milan",l:"Serie A"},
+  {s:"juventus",n:"Juventus",l:"Serie A"},{s:"lazio",n:"Lazio",l:"Serie A"},
+  {s:"lecce",n:"Lecce",l:"Serie A"},{s:"milan",n:"AC Milan",l:"Serie A"},
+  {s:"napoli",n:"Napoli",l:"Serie A"},{s:"parma",n:"Parma",l:"Serie A"},
+  {s:"pisa",n:"Pisa",l:"Serie A"},{s:"roma",n:"Roma",l:"Serie A"},
+  {s:"sassuolo",n:"Sassuolo",l:"Serie A"},{s:"torino",n:"Torino",l:"Serie A"},
+  {s:"udinese",n:"Udinese",l:"Serie A"},{s:"verona",n:"Verona",l:"Serie A"},
+  {s:"augsburg",n:"Augsburg",l:"Bundesliga"},{s:"bayer-leverkusen",n:"Bayer Leverkusen",l:"Bundesliga"},
+  {s:"bayern-munchen",n:"Bayern Munich",l:"Bundesliga"},{s:"borussia-dortmund",n:"Borussia Dortmund",l:"Bundesliga"},
+  {s:"dortmund",n:"Dortmund",l:"Bundesliga"},{s:"borussia-monchengladbach",n:"B. Monchengladbach",l:"Bundesliga"},
+  {s:"eintracht-frankfurt",n:"Eintracht Frankfurt",l:"Bundesliga"},{s:"fc-heidenheim",n:"FC Heidenheim",l:"Bundesliga"},
+  {s:"freiburg",n:"Freiburg",l:"Bundesliga"},{s:"hamburger-sv",n:"Hamburger SV",l:"Bundesliga"},
+  {s:"hoffenheim",n:"Hoffenheim",l:"Bundesliga"},{s:"koln",n:"Koln",l:"Bundesliga"},
+  {s:"mainz-05",n:"Mainz 05",l:"Bundesliga"},{s:"rb-leipzig",n:"RB Leipzig",l:"Bundesliga"},
+  {s:"st-pauli",n:"St. Pauli",l:"Bundesliga"},{s:"union-berlin",n:"Union Berlin",l:"Bundesliga"},
+  {s:"vfb-stuttgart",n:"VfB Stuttgart",l:"Bundesliga"},{s:"werder-bremen",n:"Werder Bremen",l:"Bundesliga"},
+  {s:"wolfsburg",n:"Wolfsburg",l:"Bundesliga"},
+  {s:"angers",n:"Angers",l:"Ligue 1"},{s:"as-monaco",n:"AS Monaco",l:"Ligue 1"},
+  {s:"auxerre",n:"Auxerre",l:"Ligue 1"},{s:"brest",n:"Brest",l:"Ligue 1"},
+  {s:"fc-metz",n:"FC Metz",l:"Ligue 1"},{s:"le-havre-ac",n:"Le Havre",l:"Ligue 1"},
+  {s:"lille",n:"Lille",l:"Ligue 1"},{s:"lorient",n:"Lorient",l:"Ligue 1"},
+  {s:"lyon",n:"Lyon",l:"Ligue 1"},{s:"marseille",n:"Marseille",l:"Ligue 1"},
+  {s:"nantes",n:"Nantes",l:"Ligue 1"},{s:"nice",n:"Nice",l:"Ligue 1"},
+  {s:"paris-fc",n:"Paris FC",l:"Ligue 1"},{s:"paris-saint-germain",n:"PSG",l:"Ligue 1"},
+  {s:"rc-lens",n:"RC Lens",l:"Ligue 1"},{s:"rc-strasbourg-alsace",n:"Strasbourg",l:"Ligue 1"},
+  {s:"rennes",n:"Rennes",l:"Ligue 1"},{s:"toulouse",n:"Toulouse",l:"Ligue 1"},
+  {s:"ajax",n:"Ajax",l:"Eredivisie"},{s:"az-alkmaar",n:"AZ Alkmaar",l:"Eredivisie"},
+  {s:"excelsior-rotterdam",n:"Excelsior",l:"Eredivisie"},{s:"fc-groningen",n:"FC Groningen",l:"Eredivisie"},
+  {s:"fc-utrecht",n:"FC Utrecht",l:"Eredivisie"},{s:"feyenoord",n:"Feyenoord",l:"Eredivisie"},
+  {s:"fortuna-sittard",n:"Fortuna Sittard",l:"Eredivisie"},{s:"go-ahead-eagles",n:"Go Ahead Eagles",l:"Eredivisie"},
+  {s:"heracles-almelo",n:"Heracles Almelo",l:"Eredivisie"},{s:"nac-breda",n:"NAC Breda",l:"Eredivisie"},
+  {s:"nec-nijmegen",n:"NEC Nijmegen",l:"Eredivisie"},{s:"pec-zwolle",n:"PEC Zwolle",l:"Eredivisie"},
+  {s:"psv",n:"PSV",l:"Eredivisie"},{s:"sc-heerenveen",n:"SC Heerenveen",l:"Eredivisie"},
+  {s:"sparta-rotterdam",n:"Sparta Rotterdam",l:"Eredivisie"},{s:"telstar",n:"Telstar",l:"Eredivisie"},
+  {s:"twente",n:"Twente",l:"Eredivisie"},{s:"volendam",n:"Volendam",l:"Eredivisie"},
+  {s:"alanyaspor",n:"Alanyaspor",l:"Süper Lig"},{s:"antalyaspor",n:"Antalyaspor",l:"Süper Lig"},
+  {s:"basaksehir",n:"Basaksehir",l:"Süper Lig"},{s:"besiktas",n:"Besiktas",l:"Süper Lig"},
+  {s:"eyupspor",n:"Eyupspor",l:"Süper Lig"},{s:"fatih-karagumruk",n:"Fatih Karagumruk",l:"Süper Lig"},
+  {s:"fenerbahce",n:"Fenerbahce",l:"Süper Lig"},{s:"galatasaray",n:"Galatasaray",l:"Süper Lig"},
+  {s:"gaziantep",n:"Gaziantep",l:"Süper Lig"},{s:"genclerbirligi",n:"Genclerbirligi",l:"Süper Lig"},
+  {s:"goztepe-izmir",n:"Goztepe",l:"Süper Lig"},{s:"kasimpasa",n:"Kasimpasa",l:"Süper Lig"},
+  {s:"kayserispor",n:"Kayserispor",l:"Süper Lig"},{s:"kocaelispor",n:"Kocaelispor",l:"Süper Lig"},
+  {s:"konyaspor",n:"Konyaspor",l:"Süper Lig"},{s:"rizespor",n:"Rizespor",l:"Süper Lig"},
+  {s:"samsunspor",n:"Samsunspor",l:"Süper Lig"},{s:"trabzonspor",n:"Trabzonspor",l:"Süper Lig"},
+  {s:"atletico-goianiense",n:"Atletico Goianiense",l:"Brazil Série A"},{s:"atletico-mineiro",n:"Atletico Mineiro",l:"Brazil Série A"},
+  {s:"athletico-paranaense",n:"Athletico Paranaense",l:"Brazil Série A"},{s:"bahia",n:"Bahia",l:"Brazil Série A"},
+  {s:"botafogo",n:"Botafogo",l:"Brazil Série A"},{s:"corinthians",n:"Corinthians",l:"Brazil Série A"},
+  {s:"criciuma",n:"Criciuma",l:"Brazil Série A"},{s:"cruzeiro",n:"Cruzeiro",l:"Brazil Série A"},
+  {s:"cuiaba",n:"Cuiaba",l:"Brazil Série A"},{s:"flamengo",n:"Flamengo",l:"Brazil Série A"},
+  {s:"fluminense",n:"Fluminense",l:"Brazil Série A"},{s:"fortaleza",n:"Fortaleza",l:"Brazil Série A"},
+  {s:"gremio",n:"Gremio",l:"Brazil Série A"},{s:"internacional",n:"Internacional",l:"Brazil Série A"},
+  {s:"juventude",n:"Juventude",l:"Brazil Série A"},{s:"mirassol",n:"Mirassol",l:"Brazil Série A"},
+  {s:"palmeiras",n:"Palmeiras",l:"Brazil Série A"},{s:"rb-bragantino",n:"RB Bragantino",l:"Brazil Série A"},
+  {s:"santos",n:"Santos",l:"Brazil Série A"},{s:"sao-paulo",n:"Sao Paulo",l:"Brazil Série A"},
+  {s:"vasco-da-gama",n:"Vasco da Gama",l:"Brazil Série A"},{s:"vitoria",n:"Vitoria",l:"Brazil Série A"},
+  {s:"america-mineiro",n:"America Mineiro",l:"Brazil Série B"},{s:"avai",n:"Avai",l:"Brazil Série B"},
+  {s:"botafogo-sp",n:"Botafogo SP",l:"Brazil Série B"},{s:"ceara",n:"Ceara",l:"Brazil Série B"},
+  {s:"chapecoense",n:"Chapecoense",l:"Brazil Série B"},{s:"coritiba",n:"Coritiba",l:"Brazil Série B"},
+  {s:"crb",n:"CRB",l:"Brazil Série B"},{s:"goias",n:"Goias",l:"Brazil Série B"},
+  {s:"londrina",n:"Londrina",l:"Brazil Série B"},{s:"nautico",n:"Nautico",l:"Brazil Série B"},
+  {s:"novorizontino",n:"Novorizontino",l:"Brazil Série B"},{s:"operario-ferroviario",n:"Operario Ferroviario",l:"Brazil Série B"},
+  {s:"ponte-preta",n:"Ponte Preta",l:"Brazil Série B"},{s:"sport-recife",n:"Sport Recife",l:"Brazil Série B"},
+  {s:"vila-nova",n:"Vila Nova",l:"Brazil Série B"},{s:"clube-do-remo",n:"Clube do Remo",l:"Brazil Série B"},
+  {s:"sao-bernardo",n:"Sao Bernardo",l:"Brazil Série B"},
+  {s:"alverca",n:"Alverca",l:"Primeira Liga"},{s:"arouca",n:"Arouca",l:"Primeira Liga"},
+  {s:"avs-futebol-sad",n:"AVS",l:"Primeira Liga"},{s:"benfica",n:"Benfica",l:"Primeira Liga"},
+  {s:"casa-pia-ac",n:"Casa Pia",l:"Primeira Liga"},{s:"estoril",n:"Estoril",l:"Primeira Liga"},
+  {s:"estrela-da-amadora",n:"Estrela da Amadora",l:"Primeira Liga"},{s:"famalicao",n:"Famalicao",l:"Primeira Liga"},
+  {s:"fc-porto",n:"FC Porto",l:"Primeira Liga"},{s:"gil-vicente",n:"Gil Vicente",l:"Primeira Liga"},
+  {s:"moreirense",n:"Moreirense",l:"Primeira Liga"},{s:"nacional-da-madeira",n:"Nacional",l:"Primeira Liga"},
+  {s:"rio-ave",n:"Rio Ave",l:"Primeira Liga"},{s:"santa-clara",n:"Santa Clara",l:"Primeira Liga"},
+  {s:"sc-braga",n:"SC Braga",l:"Primeira Liga"},{s:"sporting-cp",n:"Sporting CP",l:"Primeira Liga"},
+  {s:"tondela",n:"Tondela",l:"Primeira Liga"},{s:"vitoria-de-guimaraes",n:"Vitoria Guimaraes",l:"Primeira Liga"},
+  {s:"al-ahli",n:"Al Ahli",l:"Saudi Pro League"},{s:"al-ettifaq",n:"Al Ettifaq",l:"Saudi Pro League"},
+  {s:"al-fateh",n:"Al Fateh",l:"Saudi Pro League"},{s:"al-fayha",n:"Al Fayha",l:"Saudi Pro League"},
+  {s:"al-hazem",n:"Al Hazem",l:"Saudi Pro League"},{s:"al-hilal",n:"Al Hilal",l:"Saudi Pro League"},
+  {s:"al-ittihad",n:"Al Ittihad",l:"Saudi Pro League"},{s:"al-khaleej",n:"Al Khaleej",l:"Saudi Pro League"},
+  {s:"al-kholood",n:"Al Kholood",l:"Saudi Pro League"},{s:"al-najma",n:"Al Najma",l:"Saudi Pro League"},
+  {s:"al-nassr",n:"Al Nassr",l:"Saudi Pro League"},{s:"al-nassar",n:"Al Nassar",l:"Saudi Pro League"},
+  {s:"al-okhdood",n:"Al Okhdood",l:"Saudi Pro League"},{s:"al-qadsiah",n:"Al Qadsiah",l:"Saudi Pro League"},
+  {s:"al-riyadh",n:"Al Riyadh",l:"Saudi Pro League"},{s:"al-shabab",n:"Al Shabab",l:"Saudi Pro League"},
+  {s:"al-taawoun",n:"Al Taawoun",l:"Saudi Pro League"},{s:"damac",n:"Damac",l:"Saudi Pro League"},
+  {s:"neom",n:"Neom",l:"Saudi Pro League"},
+  {s:"atlanta-united",n:"Atlanta United",l:"MLS"},{s:"austins-fc",n:"Austin FC",l:"MLS"},
+  {s:"cf-montreal",n:"CF Montreal",l:"MLS"},{s:"charlotte-fc",n:"Charlotte FC",l:"MLS"},
+  {s:"chicago-fire-fc",n:"Chicago Fire",l:"MLS"},{s:"colorado-rapids",n:"Colorado Rapids",l:"MLS"},
+  {s:"columbus-crew",n:"Columbus Crew",l:"MLS"},{s:"dc-united",n:"DC United",l:"MLS"},
+  {s:"fc-cincinnati",n:"FC Cincinnati",l:"MLS"},{s:"fc-dallas",n:"FC Dallas",l:"MLS"},
+  {s:"houston-dynamo",n:"Houston Dynamo",l:"MLS"},{s:"inter-miami-cf",n:"Inter Miami",l:"MLS"},
+  {s:"la-galaxy",n:"LA Galaxy",l:"MLS"},{s:"los-angeles-fc",n:"LAFC",l:"MLS"},
+  {s:"minnesota-united-fc",n:"Minnesota United",l:"MLS"},{s:"nashville-sc",n:"Nashville SC",l:"MLS"},
+  {s:"new-england-revolution",n:"New England Revolution",l:"MLS"},{s:"new-york-city-fc",n:"New York City FC",l:"MLS"},
+  {s:"new-york-red-bulls",n:"NY Red Bulls",l:"MLS"},{s:"orlando-city",n:"Orlando City",l:"MLS"},
+  {s:"philadelphia-union",n:"Philadelphia Union",l:"MLS"},{s:"portland-timbers",n:"Portland Timbers",l:"MLS"},
+  {s:"real-salt-lake",n:"Real Salt Lake",l:"MLS"},{s:"san-diego-fc",n:"San Diego FC",l:"MLS"},
+  {s:"san-jose-earthquakes",n:"San Jose Earthquakes",l:"MLS"},{s:"seattle-sounders-fc",n:"Seattle Sounders",l:"MLS"},
+  {s:"sporting-kansas-city",n:"Sporting KC",l:"MLS"},{s:"st-louis-city-sc",n:"St. Louis City",l:"MLS"},
+  {s:"toronto-fc",n:"Toronto FC",l:"MLS"},{s:"vancouver-whitecaps-fc",n:"Vancouver Whitecaps",l:"MLS"},
+];
+
+function logoSearch(val){
+  const res=document.getElementById('logoSearchResults');
+  if(!val||val.length<2){res.style.display='none';return;}
+  const q=val.toLowerCase();
+  const matches=CLUB_DIRECTORY.filter(c=>c.n.toLowerCase().includes(q)||c.l.toLowerCase().includes(q));
+  if(!matches.length){
+    res.style.display='block';
+    res.innerHTML='<div style="padding:.7rem;text-align:center;font-family:\'Oswald\',sans-serif;font-size:.72rem;color:var(--muted);letter-spacing:1px">No clubs found — you can upload a custom logo to Pfl-logo repo</div>';
+    return;
+  }
+  const groups={};
+  matches.forEach(c=>{if(!groups[c.l])groups[c.l]=[];groups[c.l].push(c);});
+  let html='';
+  Object.keys(groups).sort().forEach(league=>{
+    html+=`<div style="font-family:'Oswald',sans-serif;font-size:.58rem;letter-spacing:2px;color:var(--gold);padding:.35rem .8rem .2rem;background:rgba(201,168,76,.06);text-transform:uppercase;position:sticky;top:0">${league}</div>`;
+    groups[league].forEach(c=>{
+      html+=`<div onclick="selectLogo('${c.s}','${c.n}','${c.l}')" style="display:flex;align-items:center;gap:.7rem;padding:.5rem .8rem;cursor:pointer;border-bottom:1px solid rgba(42,61,42,.4);transition:background .15s" onmouseover="this.style.background='rgba(201,168,76,.06)'" onmouseout="this.style.background=''">
+        <img src="${GITHUB_LOGOS_BASE}${c.s}.png" style="width:28px;height:28px;object-fit:contain;flex-shrink:0" onerror="this.style.opacity='.15'">
+        <div><div style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:.82rem">${c.n}</div><div style="font-family:'Oswald',sans-serif;font-size:.58rem;color:var(--muted);letter-spacing:.5px">${c.l}</div></div>
+      </div>`;
+    });
+  });
+  res.style.display='block';
+  res.innerHTML=html;
+}
+
+function selectLogo(slug,name,league){
+  document.getElementById('regLogoFilename').value=slug+'.png';
+  document.getElementById('regLogoSearch').value=name;
+  document.getElementById('logoSearchResults').style.display='none';
+  document.getElementById('regLogoImg').src=GITHUB_LOGOS_BASE+slug+'.png';
+  document.getElementById('regLogoSelectedName').textContent=name;
+  document.getElementById('regLogoSelectedLeague').textContent=league;
+  document.getElementById('regLogoPreview').style.display='flex';
+}
+
+function clearLogoSelection(){
+  document.getElementById('regLogoFilename').value='';
+  document.getElementById('regLogoSearch').value='';
+  document.getElementById('regLogoPreview').style.display='none';
+  document.getElementById('logoSearchResults').style.display='none';
+}
+
+function previewLogoFilename(){/* kept for compat */}
 
 function editRegistryTeam(tid){
   const t = registryTeams.find(x => x.id === tid);
@@ -2502,13 +2686,24 @@ function editRegistryTeam(tid){
   document.getElementById('regFormTitle').textContent = '✏️ Edit Team';
   document.getElementById('regName').value = t.name || '';
   document.getElementById('regCoach').value = t.coach || '';
-  const logoInput = document.getElementById('regLogoUrl');
-  const logoPreview = document.getElementById('regLogoPreview');
-  const logoImg = document.getElementById('regLogoImg');
-  if(logoInput){
-    logoInput.value = t.logoUrl || '';
-    if(t.logoUrl){ logoImg.src=t.logoUrl; logoPreview.style.display='block'; }
-    else { logoPreview.style.display='none'; }
+  const fn = document.getElementById('regLogoFilename');
+  const searchBox = document.getElementById('regLogoSearch');
+  const preview = document.getElementById('regLogoPreview');
+  const img = document.getElementById('regLogoImg');
+  const selName = document.getElementById('regLogoSelectedName');
+  const selLeague = document.getElementById('regLogoSelectedLeague');
+  if(fn) fn.value = t.logoFilename || '';
+  if(t.logoFilename){
+    const slug = t.logoFilename.replace('.png','');
+    const club = CLUB_DIRECTORY.find(c=>c.s===slug);
+    if(searchBox) searchBox.value = club ? club.n : slug;
+    if(img) img.src = GITHUB_LOGOS_BASE + t.logoFilename;
+    if(selName) selName.textContent = club ? club.n : slug;
+    if(selLeague) selLeague.textContent = club ? club.l : '';
+    if(preview) preview.style.display = 'flex';
+  } else {
+    if(searchBox) searchBox.value = '';
+    if(preview) preview.style.display = 'none';
   }
   document.getElementById('regFormWrap').style.display = 'block';
   document.getElementById('regFormWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -2517,8 +2712,8 @@ function editRegistryTeam(tid){
 function saveRegistryTeam(){
   const name = document.getElementById('regName').value.trim();
   const coach = document.getElementById('regCoach').value.trim();
-  const logoUrlInput = document.getElementById('regLogoUrl');
-  const logoUrl = logoUrlInput ? logoUrlInput.value.trim() : '';
+  const fnInput = document.getElementById('regLogoFilename');
+  const logoFilename = fnInput ? fnInput.value.trim() : '';
   const badge = '⚽';
   if(!name){ toast('Team name is required', true); return; }
 
@@ -2527,15 +2722,14 @@ function saveRegistryTeam(){
     if(t){
       const oldName = t.name;
       t.name = name; t.coach = coach; t.badge = badge;
-      if(logoUrl) t.logoUrl = logoUrl; else delete t.logoUrl;
+      if(logoFilename) t.logoFilename = logoFilename; else delete t.logoFilename;
+      // Keep old logoUrl if it exists (backward compat) but logoFilename takes priority
       let tourChanged = false;
       db.tournaments.forEach(tour => {
         normalizeTour(tour);
         tour.teams.forEach(tm => {
           if(tm.name.toLowerCase() === oldName.toLowerCase()){
-            tm.name = name;
-            tm.coach = coach;
-            tourChanged = true;
+            tm.name = name; tm.coach = coach; tourChanged = true;
           }
         });
       });
@@ -2550,12 +2744,8 @@ function saveRegistryTeam(){
     if(registryTeams.some(t => t.name.toLowerCase() === name.toLowerCase())){
       toast('A team with that name already exists', true); return;
     }
-    const newTeam = {
-      id: 'reg_' + Date.now(),
-      name, coach, badge,
-      dateCreated: new Date().toISOString().slice(0,10)
-    };
-    if(logoUrl) newTeam.logoUrl = logoUrl;
+    const newTeam = { id:'reg_'+Date.now(), name, coach, badge, dateCreated:new Date().toISOString().slice(0,10) };
+    if(logoFilename) newTeam.logoFilename = logoFilename;
     registryTeams.push(newTeam);
   }
 
@@ -2563,9 +2753,7 @@ function saveRegistryTeam(){
   if(window._fbSaveRegTeam){
     const tid = editingRegId || registryTeams[registryTeams.length-1].id;
     const t = registryTeams.find(x => x.id === tid);
-    if(t) window._fbSaveRegTeam(t.id, t).then(()=>{
-      setSyncStatus('idle');
-    }).catch((err)=>{
+    if(t) window._fbSaveRegTeam(t.id, t).then(()=>{ setSyncStatus('idle'); }).catch((err)=>{
       console.error('Registry Firebase save failed:', err);
       toast('⚠️ Saved locally but Firebase sync failed — try again', true);
     });
@@ -2595,16 +2783,19 @@ function renderRegistry(){
   }
   const sorted = registryTeams.slice().sort((a,b) => a.name.localeCompare(b.name));
   el.innerHTML = sorted.map(t => {
-    const logoSrc = t.logoUrl || null;
-    const logoHtml = logoSrc
-      ? `<img src="${logoSrc}" style="width:36px;height:36px;object-fit:contain;border-radius:4px" onerror="this.src='';">`
+    const src = t.logoFilename ? GITHUB_LOGOS_BASE + t.logoFilename : (t.logoUrl || null);
+    const logoHtml = src
+      ? `<img src="${src}" style="width:36px;height:36px;object-fit:contain;border-radius:4px" onerror="this.style.opacity='.2'">`
       : `<span style="font-size:1.5rem">⚽</span>`;
+    const logoStatus = t.logoFilename
+      ? `🖼 ${t.logoFilename}`
+      : (t.logoUrl ? '🔗 Custom URL' : '🔍 Auto logo');
     return `<div class="t-card" style="cursor:default">
       <div style="display:flex;align-items:center;gap:.8rem;flex:1;min-width:0">
         <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${logoHtml}</div>
         <div style="min-width:0">
           <div class="t-card-name">${t.name}</div>
-          <div class="t-card-meta">${t.coach ? '🧢 '+t.coach : 'No coach'} · Added ${t.dateCreated||'—'}${t.logoUrl?' · 🖼 Custom logo':' · 🔍 Auto logo'}</div>
+          <div class="t-card-meta">${t.coach ? '🧢 '+t.coach : 'No coach'} · ${t.dateCreated||'—'} · ${logoStatus}</div>
         </div>
       </div>
       <div style="display:flex;gap:.5rem;flex-shrink:0">
