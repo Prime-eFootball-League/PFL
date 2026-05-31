@@ -2996,53 +2996,69 @@ function renderRegistry(){
 
 // ── INIT ──
 checkSession();
-// Don't render from localStorage on startup — always load from Firebase first
-// localStorage is only used for saving edits, not for initial render
 
 function adminInit(){
-  if(!window._fbLoadAll || !window._fbLoadRegistry || !window._authReady){
-    setTimeout(adminInit, 300);
-    return;
-  }
-  setSyncStatus('saving');
+  var startTime = Date.now();
 
-  // Step 1: Load registry first (same sequential pattern as index.html)
-  window._fbLoadRegistry().then(regData => {
-    if(regData){
-      registryTeams = Object.values(regData);
-      saveRegistry(); // keep localStorage in sync for offline edits
-    } else {
-      registryTeams = [];
-    }
-    renderRegistry();
-    buildRegistryDropdown();
+  function tryLoad(){
+    var elapsed = Date.now() - startTime;
 
-    // Step 2: Now load tournaments — registry already populated
-    return window._fbLoadAll();
-  }).then(cloudTours => {
-    if(!cloudTours){
-      db = {tournaments:[]};
-      setSyncStatus('idle');
-      renderList();
+    // If Firebase auth + bridges ready — load from Firebase (the truth)
+    if(window._fbLoadAll && window._fbLoadRegistry && window._authReady){
+      setSyncStatus('saving');
+
+      // Registry first, then tournaments (sequential — logos ready before table renders)
+      window._fbLoadRegistry().then(function(regData){
+        if(regData){
+          registryTeams = Object.values(regData);
+          saveRegistry();
+        } else {
+          registryTeams = [];
+        }
+        renderRegistry();
+        buildRegistryDropdown();
+        return window._fbLoadAll();
+      }).then(function(cloudTours){
+        if(!cloudTours){
+          db = {tournaments:[]};
+          setSyncStatus('idle');
+          renderList();
+          return;
+        }
+        db = {tournaments: Object.values(cloudTours).map(normalizeTour)};
+        localStorage.setItem('pfl_db', JSON.stringify(db));
+        renderList();
+        if(activeTid) updateAll();
+        setSyncStatus('idle');
+      }).catch(function(){
+        // Firebase fetch failed after auth — fall back to localStorage
+        fallbackToLocal();
+      });
       return;
     }
-    // Firebase is the truth — replace local state entirely
-    db = {tournaments: Object.values(cloudTours).map(normalizeTour)};
-    localStorage.setItem('pfl_db', JSON.stringify(db));
-    renderList();
-    if(activeTid) updateAll();
-    setSyncStatus('idle');
-  }).catch(() => {
-    // Firebase failed — fall back to localStorage so admin isn't locked out
-    const saved = localStorage.getItem('pfl_db');
-    if(saved){ try{ db = JSON.parse(saved); }catch(e){ db={tournaments:[]}; } }
-    const savedReg = localStorage.getItem('pfl_registry');
-    if(savedReg && !registryTeams.length){ try{ registryTeams = JSON.parse(savedReg); }catch(e){} }
+
+    // Still waiting — if under 5 seconds, keep polling
+    if(elapsed < 5000){
+      setTimeout(tryLoad, 300);
+      return;
+    }
+
+    // 5 seconds passed, Firebase auth never responded — use localStorage
+    fallbackToLocal();
+  }
+
+  function fallbackToLocal(){
+    var saved = localStorage.getItem('pfl_db');
+    if(saved){ try{ db = JSON.parse(saved); db.tournaments.forEach(normalizeTour); }catch(e){ db={tournaments:[]}; } }
+    var savedReg = localStorage.getItem('pfl_registry');
+    if(savedReg){ try{ registryTeams = JSON.parse(savedReg); }catch(e){ registryTeams=[]; } }
     renderList();
     renderRegistry();
     buildRegistryDropdown();
     setSyncStatus('error');
-  });
+  }
+
+  tryLoad();
 }
 adminInit();
 </script>
