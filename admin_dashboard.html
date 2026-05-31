@@ -2800,28 +2800,34 @@ function showLogoGrid(filterVal){
     ? CLUB_DIRECTORY.filter(function(c){return c.n.toLowerCase().indexOf(q)!==-1||c.l.toLowerCase().indexOf(q)!==-1;})
     : CLUB_DIRECTORY.slice();
   if(!matches.length){
-    res.innerHTML='<div style="padding:.8rem;text-align:center;font-family:'Oswald',sans-serif;font-size:.7rem;color:var(--muted);letter-spacing:1px">No clubs found</div>';
+    res.innerHTML="<div style=\"padding:.8rem;text-align:center;font-family:'Oswald',sans-serif;font-size:.7rem;color:var(--muted);letter-spacing:1px\">No clubs found</div>";
     res.style.display='block';return;
   }
-  var html='<div style="display:flex;align-items:center;justify-content:space-between;padding:.4rem .8rem;background:var(--card2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2">'
-    +'<span style="font-family:'Oswald',sans-serif;font-size:.6rem;color:var(--muted);letter-spacing:1px">'+matches.length+' clubs</span>'
-    +'<div style="display:flex;gap:.3rem">'
-    +'<button onclick="setLogoSort('alpha')" style="font-family:'Oswald',sans-serif;font-size:.58rem;padding:.15rem .5rem;border-radius:10px;border:1px solid;cursor:pointer;background:'+(_logoSortMode==='alpha'?'var(--gold)':'transparent')+';color:'+(_logoSortMode==='alpha'?'#000':'var(--muted)')+';border-color:'+(_logoSortMode==='alpha'?'var(--gold)':'var(--border)')+'">A–Z</button>'
-    +'<button onclick="setLogoSort('league')" style="font-family:'Oswald',sans-serif;font-size:.58rem;padding:.15rem .5rem;border-radius:10px;border:1px solid;cursor:pointer;background:'+(_logoSortMode==='league'?'var(--gold)':'transparent')+';color:'+(_logoSortMode==='league'?'#000':'var(--muted)')+';border-color:'+(_logoSortMode==='league'?'var(--gold)':'var(--border)')+'">League</button>'
-    +'</div></div>';
+  var azBg=_logoSortMode==='alpha'?'var(--gold)':'transparent';
+  var azCol=_logoSortMode==='alpha'?'#000':'var(--muted)';
+  var azBdr=_logoSortMode==='alpha'?'var(--gold)':'var(--border)';
+  var lgBg=_logoSortMode==='league'?'var(--gold)':'transparent';
+  var lgCol=_logoSortMode==='league'?'#000':'var(--muted)';
+  var lgBdr=_logoSortMode==='league'?'var(--gold)':'var(--border)';
+  var html="<div style=\"display:flex;align-items:center;justify-content:space-between;padding:.4rem .8rem;background:var(--card2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2\">"
+    +"<span style=\"font-family:'Oswald',sans-serif;font-size:.6rem;color:var(--muted);letter-spacing:1px\">"+matches.length+" clubs</span>"
+    +"<div style=\"display:flex;gap:.3rem\">"
+    +"<button onclick=\"setLogoSort('alpha')\" style=\"font-family:'Oswald',sans-serif;font-size:.58rem;padding:.15rem .5rem;border-radius:10px;border:1px solid;cursor:pointer;background:"+azBg+";color:"+azCol+";border-color:"+azBdr+"\">A\u2013Z</button>"
+    +"<button onclick=\"setLogoSort('league')\" style=\"font-family:'Oswald',sans-serif;font-size:.58rem;padding:.15rem .5rem;border-radius:10px;border:1px solid;cursor:pointer;background:"+lgBg+";color:"+lgCol+";border-color:"+lgBdr+"\">League</button>"
+    +"</div></div>";
   if(_logoSortMode==='alpha'){
     matches.sort(function(a,b){return a.n.localeCompare(b.n);});
     var currentLetter='';
     matches.forEach(function(c){
       var letter=c.n[0].toUpperCase();
-      if(letter!==currentLetter){currentLetter=letter;html+='<div style="font-family:'Oswald',sans-serif;font-size:.58rem;letter-spacing:2px;color:var(--gold);padding:.3rem .8rem .1rem;background:rgba(201,168,76,.04);position:sticky;top:29px">'+letter+'</div>';}
+      if(letter!==currentLetter){currentLetter=letter;html+="<div style=\"font-family:'Oswald',sans-serif;font-size:.58rem;letter-spacing:2px;color:var(--gold);padding:.3rem .8rem .1rem;background:rgba(201,168,76,.04);position:sticky;top:29px\">"+letter+"</div>";}
       html+=_logoRow(c,q);
     });
   } else {
     var groups={};
     matches.forEach(function(c){if(!groups[c.l])groups[c.l]=[];groups[c.l].push(c);});
     Object.keys(groups).sort().forEach(function(league){
-      html+='<div style="font-family:'Oswald',sans-serif;font-size:.58rem;letter-spacing:2px;color:var(--gold);padding:.3rem .8rem .1rem;background:rgba(201,168,76,.04);position:sticky;top:29px;text-transform:uppercase">'+league+'</div>';
+      html+="<div style=\"font-family:'Oswald',sans-serif;font-size:.58rem;letter-spacing:2px;color:var(--gold);padding:.3rem .8rem .1rem;background:rgba(201,168,76,.04);position:sticky;top:29px;text-transform:uppercase\">"+league+"</div>";
       groups[league].sort(function(a,b){return a.n.localeCompare(b.n);}).forEach(function(c){html+=_logoRow(c,q);});
     });
   }
@@ -2832,11 +2838,14 @@ function showLogoGrid(filterVal){
 function _logoRow(c,q){
   var nm=c.n;
   if(q&&q.length>0){var re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');nm=nm.replace(re,'<strong style="color:var(--gold)">$1</strong>');}
-  return '<div onclick="selectLogo(''+c.s+'',''+c.n.replace(/'/g,"\\'")+'',''+c.l.replace(/'/g,"\\'")+'')" style="display:flex;align-items:center;gap:.7rem;padding:.45rem .8rem;cursor:pointer;border-bottom:1px solid rgba(42,61,42,.3);transition:background .15s" onmouseover="this.style.background='rgba(201,168,76,.06)'" onmouseout="this.style.background=''">'
-    +'<img src="'+GITHUB_LOGOS_BASE+c.s+'.png" style="width:30px;height:30px;object-fit:contain;flex-shrink:0" onerror="this.style.opacity='.12'">'
-    +'<div><div style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:.82rem">'+nm+'</div>'
-    +'<div style="font-family:'Oswald',sans-serif;font-size:.57rem;color:var(--muted);letter-spacing:.3px">'+c.l+'</div></div>'
-    +'</div>';
+  var slug=c.s;
+  var cname=c.n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  var cleague=c.l.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return "<div onclick=\"selectLogo('"+slug+"','"+cname+"','"+cleague+"')\" style=\"display:flex;align-items:center;gap:.7rem;padding:.45rem .8rem;cursor:pointer;border-bottom:1px solid rgba(42,61,42,.3);transition:background .15s\" onmouseover=\"this.style.background='rgba(201,168,76,.06)'\" onmouseout=\"this.style.background=''\">\n"
+    +"<img src=\""+GITHUB_LOGOS_BASE+c.s+".png\" style=\"width:30px;height:30px;object-fit:contain;flex-shrink:0\" onerror=\"this.style.opacity='.12'\">\n"
+    +"<div><div style=\"font-family:'DM Sans',sans-serif;font-weight:700;font-size:.82rem\">"+nm+"</div>\n"
+    +"<div style=\"font-family:'Oswald',sans-serif;font-size:.57rem;color:var(--muted);letter-spacing:.3px\">"+c.l+"</div></div>\n"
+    +"</div>";
 }
 
 function setLogoSort(mode){_logoSortMode=mode;showLogoGrid(document.getElementById('regLogoSearch').value);}
