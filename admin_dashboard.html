@@ -195,6 +195,18 @@ td.pts{font-family:'Anton',sans-serif;font-size:1.1rem;color:var(--gold);text-sh
 
 @media(max-width:400px){.stats{grid-template-columns:repeat(2,1fr)}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.tab-content.active{animation:fadeInUp .2s ease both}
+.btn-full:active,.btn-create:active{transform:scale(.97);filter:brightness(.9)}
+.btn-sm:active{transform:scale(.95);opacity:.8}
+.btn-gold:active,.btn-outline:active,.btn-red:active,.btn-green:active{transform:scale(.97)!important;filter:brightness(.88)!important}
+.opt-btn:active{transform:scale(.95);background:rgba(201,168,76,.12)!important;border-color:var(--gold)!important}
+.sc-btn:active{transform:scale(.82)!important}
+.fix-card:active{transform:scale(.98);box-shadow:0 1px 6px rgba(0,0,0,.4)!important}
+.t-card:active{border-color:var(--gold)!important;transform:scale(.99)}
+.fix-tap:active{background:rgba(0,232,122,.2)!important;transform:scale(.97)}
+.logo-row{display:flex;align-items:center;gap:.85rem;padding:.65rem .9rem;cursor:pointer;border-bottom:1px solid rgba(42,61,42,.3);transition:background .15s;min-height:52px}
+.logo-row:active{background:rgba(201,168,76,.1)!important}
 </style>
 </head>
 <body>
@@ -2839,15 +2851,14 @@ function _logoRow(c,q){
   var nm=c.n;
   if(q&&q.length>0){var re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');nm=nm.replace(re,'<strong style="color:var(--gold)">$1</strong>');}
   var slug=c.s;
-  var cname=c.n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  var cleague=c.l.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  return "<div onclick=\"selectLogo('"+slug+"','"+cname+"','"+cleague+"')\" style=\"display:flex;align-items:center;gap:.7rem;padding:.45rem .8rem;cursor:pointer;border-bottom:1px solid rgba(42,61,42,.3);transition:background .15s\" onmouseover=\"this.style.background='rgba(201,168,76,.06)'\" onmouseout=\"this.style.background=''\">\n"
-    +"<img src=\""+GITHUB_LOGOS_BASE+c.s+".png\" style=\"width:30px;height:30px;object-fit:contain;flex-shrink:0\" onerror=\"this.style.opacity='.12'\">\n"
-    +"<div><div style=\"font-family:'DM Sans',sans-serif;font-weight:700;font-size:.82rem\">"+nm+"</div>\n"
-    +"<div style=\"font-family:'Oswald',sans-serif;font-size:.57rem;color:var(--muted);letter-spacing:.3px\">"+c.l+"</div></div>\n"
-    +"</div>";
+  var cname=c.n.replace(/'/g,"\\'");
+  var cleague=c.l.replace(/'/g,"\\'");
+  return '<div class="logo-row" onclick="selectLogo(\''+slug+'\',\''+cname+'\',\''+cleague+'\')" onmouseover="this.style.background=\'rgba(201,168,76,.08)\'" onmouseout="this.style.background=\'\'">\n'
+    +'<img src="'+GITHUB_LOGOS_BASE+c.s+'.png" style="width:40px;height:40px;object-fit:contain;flex-shrink:0" onerror="this.style.opacity=\'.15\'">\n'
+    +'<div><div style="font-family:DM Sans,sans-serif;font-weight:700;font-size:.95rem">'+nm+'</div>\n'
+    +'<div style="font-family:Oswald,sans-serif;font-size:.68rem;color:var(--muted);letter-spacing:.3px">'+c.l+'</div></div>\n'
+    +'</div>';
 }
-
 function setLogoSort(mode){_logoSortMode=mode;showLogoGrid(document.getElementById('regLogoSearch').value);}
 function logoSearch(val){showLogoGrid(val);}
 

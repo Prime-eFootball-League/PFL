@@ -115,6 +115,18 @@ body::after{
 .hdr-live.syncing .live-text::before{content:'SYNCING'}
 .hdr-live:not(.syncing) .live-text::before{content:'LIVE'}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.sec-fade{animation:fadeInUp .22s ease both}
+.round-body{overflow:hidden;transition:max-height .28s cubic-bezier(.4,0,.2,1),opacity .22s ease}
+.round-body.collapsed{max-height:0!important;opacity:0}
+.round-body.expanded{opacity:1}
+.round-divider:active .round-divider-pill{background:rgba(201,168,76,.18);transform:scale(.97)}
+.round-divider .round-divider-pill{transition:background .15s,transform .12s}
+.itab:active{transform:scale(.95)!important;opacity:.8}
+.t-tab:active{transform:scale(.95)!important;opacity:.8}
+.reg-card-tap:active{transform:scale(.98);box-shadow:0 1px 6px rgba(0,0,0,.5)!important}
+.past-card:active{transform:scale(.98)}
 
 /* ── TOURNAMENT TABS ── */
 .t-tabs{
@@ -673,7 +685,7 @@ function showSec(name){
     if(b) b.classList.toggle('active',s===name);
   });
   var target=document.getElementById('sec'+name.charAt(0).toUpperCase()+name.slice(1));
-  if(target) target.style.display='';
+  if(target){target.style.display='';target.classList.remove('sec-fade');void target.offsetWidth;target.classList.add('sec-fade');}
   if(name==='table') renderTable();
   else if(name==='results') renderResults();
   else if(name==='fixtures') renderFixtures();
@@ -1234,7 +1246,7 @@ function render(name){
     if(el) el.style.display='none';
   });
   var target=document.getElementById('sec'+name.charAt(0).toUpperCase()+name.slice(1));
-  if(target) target.style.display='';
+  if(target){target.style.display='';target.classList.remove('sec-fade');void target.offsetWidth;target.classList.add('sec-fade');}
   if(name==='table') renderTable();
   else if(name==='results') renderResults();
   else if(name==='fixtures') renderFixtures();
@@ -1342,7 +1354,7 @@ function renderResults(){
       '</div>'+
       '<div class="round-divider-line"></div>'+
       '</button>'+
-      '<div id="'+uid+'" style="display:'+(isLatest?'block':'none')+';overflow:hidden">';
+      '<div id="'+uid+'" class="round-body'+(isLatest?' expanded':' collapsed')+'" style="max-height:'+(isLatest?'none':'0')+'">';
     rm.forEach(function(m){
       var homeWin=m.homeScore>m.awayScore;
       var awayWin=m.awayScore>m.homeScore;
@@ -1384,9 +1396,22 @@ function toggleRound(uid){
   var el=document.getElementById(uid);
   var arr=document.getElementById('arr_'+uid);
   if(!el) return;
-  var open=el.style.display==='block';
-  el.style.display=open?'none':'block';
-  if(arr) arr.style.transform=open?'rotate(-90deg)':'rotate(0deg)';
+  var isOpen=el.classList.contains('expanded');
+  if(isOpen){
+    el.style.maxHeight=el.scrollHeight+'px';
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        el.classList.add('collapsed');
+        el.classList.remove('expanded');
+      });
+    });
+  } else {
+    el.classList.remove('collapsed');
+    el.classList.add('expanded');
+    el.style.maxHeight=el.scrollHeight+'px';
+    setTimeout(function(){el.style.maxHeight='none';},300);
+  }
+  if(arr) arr.style.transform=isOpen?'rotate(-90deg)':'rotate(0deg)';
 }
 
 // ── FIXTURES ───────────────────────────────────────────────────
@@ -1477,7 +1502,7 @@ function renderFixtures(){
         '</div>'+
         '<div class="round-divider-line"></div>'+
         '</button>'+
-        '<div id="'+uid+'" style="display:'+(isFirst?'block':'none')+';overflow:hidden">';
+        '<div id="'+uid+'" class="round-body'+(isFirst?' expanded':' collapsed')+'" style="max-height:'+(isFirst?'none':'0')+'">';
       rm.forEach(function(m){h+=buildFixCard(resolveTeamName(m,'home'),resolveTeamName(m,'away'),m.date||'Date TBC',r,m);});
       h+='</div></div>';
     });
@@ -1494,7 +1519,7 @@ function renderFixtures(){
       '</div>'+
       '<div class="round-divider-line"></div>'+
       '</button>'+
-      '<div id="'+uid+'" style="display:block;overflow:hidden">';
+      '<div id="'+uid+'" class="round-body expanded" style="max-height:none">';
     bracketPending.forEach(function(m){h+=buildFixCard(m.homeName,m.awayName,m.date||'Date TBC',m.round+(m.legs===2?' · H&A':' · Single'));});
     h+='</div></div>';
   }
