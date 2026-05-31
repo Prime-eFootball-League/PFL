@@ -35,6 +35,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .t-card-badge{font-family:'Oswald',sans-serif;font-size:.65rem;letter-spacing:1.5px;font-weight:400;padding:.2rem .7rem;border-radius:20px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold);flex-shrink:0}
 .t-empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
 .t-empty-icon{font-size:3rem;margin-bottom:.8rem}
+@keyframes spin{to{transform:rotate(360deg)}}
 .btn-create{display:block;width:100%;padding:.85rem;background:linear-gradient(135deg,var(--gold),#a07828);color:#000;border:none;border-radius:10px;font-family:'Anton',sans-serif;font-size:1rem;text-transform:uppercase;letter-spacing:3px;cursor:pointer;margin-top:1rem;transition:all .2s;box-shadow:0 4px 16px rgba(201,168,76,.25)}
 .btn-create:hover{background:linear-gradient(135deg,var(--gold2),var(--gold));box-shadow:0 6px 24px rgba(201,168,76,.4)}
 
@@ -217,7 +218,7 @@ td.pts{font-family:'Anton',sans-serif;font-size:1.1rem;color:var(--gold);text-sh
 <!-- ══════════════════════════════ -->
 <div id="viewList" class="t-list">
   <div class="t-list-title">Tournaments</div>
-  <div id="tList"><div class="t-empty"><div class="t-empty-icon">🏆</div><p>No tournaments yet.<br>Create one below!</p></div></div>
+  <div id="tList"><div class="t-empty" id="tListLoading"><div class="t-empty-icon" style="font-size:1.5rem;animation:spin 1.2s linear infinite;display:inline-block">⚙️</div><p style="color:var(--muted)">Loading from Firebase...</p></div></div>
   <button class="btn-create" onclick="startWizard()">+ CREATE NEW TOURNAMENT</button>
 
   <!-- ── TEAMS REGISTRY ── -->
@@ -264,7 +265,7 @@ td.pts{font-family:'Anton',sans-serif;font-size:1.1rem;color:var(--gold);text-sh
     </div>
 
     <!-- Registry list -->
-    <div id="regList"><div class="empty" style="padding:1.5rem">No teams in registry yet</div></div>
+    <div id="regList"><div class="empty" style="padding:1.5rem" id="regListLoading"><span style="font-size:1rem;animation:spin 1.2s linear infinite;display:inline-block">⚙️</span> <span style="color:var(--muted)">Loading teams...</span></div></div>
   </div>
 </div>
 
@@ -1074,7 +1075,7 @@ function addTeam(){
     if(tour.teams.some(t=>t.name.toLowerCase()===regTeam.name.toLowerCase())){
       toast(`${regTeam.name} is already in this tournament`,true);return;
     }
-    tour.teams.push({id:'team_'+Date.now(),name:regTeam.name,coach:regTeam.coach||'',group:g,played:0,won:0,drawn:0,lost:0,goalsFor:0,goalsAgainst:0,points:0});
+    tour.teams.push({id:'team_'+Date.now(),registryId:regTeam.id,name:regTeam.name,coach:regTeam.coach||'',group:g,played:0,won:0,drawn:0,lost:0,goalsFor:0,goalsAgainst:0,points:0});
     if(sel) sel.value='';
     sdb();buildTeamSelects();renderTeams();buildRegistryDropdown();toast(`${regTeam.name} added!`);
     return;
@@ -2993,65 +2994,57 @@ function renderRegistry(){
   }).join('');
 }
 
-function initRegistrySync(){
-  if(!window._fbLoadRegistry || !window._authReady){ setTimeout(initRegistrySync, 300); return; }
-  window._fbLoadRegistry().then(data => {
-    if(!data) return;
-    const cloudTeams = Object.values(data);
-    let changed = false;
-    cloudTeams.forEach(ct => {
-      const idx = registryTeams.findIndex(x => x.id === ct.id);
-      if(idx === -1){ registryTeams.push(ct); changed = true; }
-      else { registryTeams[idx] = ct; changed = true; }
-    });
-    if(changed){ saveRegistry(); renderRegistry(); buildRegistryDropdown(); }
-  }).catch(()=>{});
-}
-
 // ── INIT ──
 checkSession();
-gdb();
-loadRegistry();
-renderList();
-renderRegistry();
+// Don't render from localStorage on startup — always load from Firebase first
+// localStorage is only used for saving edits, not for initial render
 
-// Then pull from Firebase and merge (in case admin switched device)
-function initFirebaseSync(){
-  if(!window._fbLoadAll || !window._authReady){
-    setTimeout(initFirebaseSync, 300);
+function adminInit(){
+  if(!window._fbLoadAll || !window._fbLoadRegistry || !window._authReady){
+    setTimeout(adminInit, 300);
     return;
   }
   setSyncStatus('saving');
-  window._fbLoadAll().then(cloudTours => {
-    if(!cloudTours){setSyncStatus('idle');return;}
-    let changed = false;
-    Object.values(cloudTours).forEach(cloudTour => {
-      const idx = db.tournaments.findIndex(t => t.id === cloudTour.id);
-      if(idx === -1){
-        // New tournament from cloud — add it locally
-        db.tournaments.push(normalizeTour(cloudTour));
-        changed = true;
-      } else {
-        const localTour = db.tournaments[idx];
-        const cloudTime = cloudTour.updatedAt || 0;
-        const localTime = localTour.updatedAt || 0;
-        // Only overwrite local if cloud is newer — prevents losing unsaved local work
-        if(cloudTime > localTime){
-          db.tournaments[idx] = normalizeTour(cloudTour);
-          changed = true;
-        }
-      }
-    });
-    if(changed){
-      localStorage.setItem('pfl_db', JSON.stringify(db));
-      renderList();
-      if(activeTid) updateAll();
+
+  // Step 1: Load registry first (same sequential pattern as index.html)
+  window._fbLoadRegistry().then(regData => {
+    if(regData){
+      registryTeams = Object.values(regData);
+      saveRegistry(); // keep localStorage in sync for offline edits
+    } else {
+      registryTeams = [];
     }
+    renderRegistry();
+    buildRegistryDropdown();
+
+    // Step 2: Now load tournaments — registry already populated
+    return window._fbLoadAll();
+  }).then(cloudTours => {
+    if(!cloudTours){
+      db = {tournaments:[]};
+      setSyncStatus('idle');
+      renderList();
+      return;
+    }
+    // Firebase is the truth — replace local state entirely
+    db = {tournaments: Object.values(cloudTours).map(normalizeTour)};
+    localStorage.setItem('pfl_db', JSON.stringify(db));
+    renderList();
+    if(activeTid) updateAll();
     setSyncStatus('idle');
-  }).catch(()=>setSyncStatus('error'));
+  }).catch(() => {
+    // Firebase failed — fall back to localStorage so admin isn't locked out
+    const saved = localStorage.getItem('pfl_db');
+    if(saved){ try{ db = JSON.parse(saved); }catch(e){ db={tournaments:[]}; } }
+    const savedReg = localStorage.getItem('pfl_registry');
+    if(savedReg && !registryTeams.length){ try{ registryTeams = JSON.parse(savedReg); }catch(e){} }
+    renderList();
+    renderRegistry();
+    buildRegistryDropdown();
+    setSyncStatus('error');
+  });
 }
-initFirebaseSync();
-initRegistrySync();
+adminInit();
 </script>
 </body>
 </html>
