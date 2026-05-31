@@ -562,6 +562,41 @@ tbody tr:hover td{background:var(--card2)!important;filter:none}
   100%{filter:drop-shadow(0 0 32px rgba(201,168,76,1)) drop-shadow(0 0 70px rgba(201,168,76,0.7)) drop-shadow(0 0 100px rgba(240,208,128,0.3))}
 }
 
+/* ── SKELETON LOADING ── */
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.skel{
+  background:linear-gradient(90deg,var(--card) 25%,var(--card2) 50%,var(--card) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.4s infinite;
+  border-radius:6px;
+}
+.skel-table{width:100%;border-radius:10px;border:1px solid var(--border);overflow:hidden;background:var(--card)}
+.skel-thead{height:36px;background:var(--thead-bg);border-bottom:1px solid var(--border2)}
+.skel-row{display:flex;align-items:center;gap:.6rem;padding:.55rem .8rem;border-bottom:1px solid rgba(42,61,42,.4)}
+.skel-row:last-child{border-bottom:none}
+.skel-pos{width:22px;height:18px;flex-shrink:0}
+.skel-logo{width:20px;height:20px;border-radius:50%;flex-shrink:0}
+.skel-name{flex:1;height:14px;max-width:120px}
+.skel-num{width:22px;height:12px}
+
+/* ── RANK BADGES (top 3) ── */
+.rank-gold{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#f0d080,#c9a84c);color:#000;font-family:'Anton',sans-serif;font-size:.72rem;font-weight:900;box-shadow:0 0 10px rgba(201,168,76,.5);flex-shrink:0}
+.rank-silver{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#e8e8e8,#a0a0a0);color:#000;font-family:'Anton',sans-serif;font-size:.72rem;font-weight:900;box-shadow:0 0 8px rgba(160,160,160,.4);flex-shrink:0}
+.rank-bronze{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#e8a060,#a05020);color:#fff;font-family:'Anton',sans-serif;font-size:.72rem;font-weight:900;box-shadow:0 0 8px rgba(180,100,40,.4);flex-shrink:0}
+.rank-plain{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;font-family:'Oswald',sans-serif;font-size:.85rem;color:var(--muted);flex-shrink:0}
+.rank-1 td{background:rgba(201,168,76,.04)!important}
+.rank-2 td{background:rgba(192,192,192,.025)!important}
+.rank-3 td{background:rgba(205,127,50,.025)!important}
+
+/* ── GLASS CARDS (results + fixtures only) ── */
+.r-item{background:rgba(24,34,24,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.fix-item{background:rgba(24,34,24,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
+/* ── TEAM ACCORDION ANIMATE ── */
+.reg-expand{overflow:hidden;transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .25s ease}
+.reg-expand.acc-closed{max-height:0;opacity:0;padding:0;border:none}
+.reg-expand.acc-open{opacity:1}
+
 /* ── ROUND DIVIDER STYLE ── */
 .round-divider{
   display:flex;align-items:center;gap:.6rem;cursor:pointer;
@@ -623,7 +658,17 @@ tbody tr:hover td{background:var(--card2)!important;filter:none}
 <div id="secPast" style="padding:.8rem;display:none"></div>
 <div id="tourContent" style="display:none">
 
-<div id="secTable"></div>
+<div id="secTable"><div class="tbl-outer" id="skelTable">
+<div style="margin-bottom:.8rem"><div class="skel" style="height:22px;width:55%;margin-bottom:.4rem"></div><div class="skel" style="height:12px;width:35%"></div></div>
+<div class="skel-table">
+<div class="skel-thead"></div>
+<div class="skel-row"><div class="skel skel-pos"></div><div class="skel skel-logo"></div><div class="skel skel-name"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div></div>
+<div class="skel-row"><div class="skel skel-pos"></div><div class="skel skel-logo"></div><div class="skel skel-name" style="max-width:100px"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div></div>
+<div class="skel-row"><div class="skel skel-pos"></div><div class="skel skel-logo"></div><div class="skel skel-name" style="max-width:80px"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div></div>
+<div class="skel-row"><div class="skel skel-pos"></div><div class="skel skel-logo"></div><div class="skel skel-name" style="max-width:110px"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div></div>
+<div class="skel-row"><div class="skel skel-pos"></div><div class="skel skel-logo"></div><div class="skel skel-name" style="max-width:90px"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div><div class="skel skel-num"></div></div>
+</div>
+</div></div>
 <div id="secResults" style="display:none" class="results-list"></div>
 <div id="secFixtures" style="display:none" class="results-list"></div>
 <div id="secPlayoffs" style="display:none" class="results-list">
@@ -813,7 +858,7 @@ function renderPublicRegistry(){
       '</div>'+
       '<div class="reg-chevron" id="chv_'+safeId+'">▼</div>'+
       '</div>'+
-      '<div class="reg-expand" id="'+safeId+'" style="display:none"></div>'+
+      '<div class="reg-expand acc-closed" id="'+safeId+'" style="max-height:0"></div>'+
       '</div>';
   });
   el.innerHTML=h;
@@ -823,13 +868,23 @@ function toggleRegCard(safeId,regTeamId){
   var panel=document.getElementById(safeId);
   var chv=document.getElementById('chv_'+safeId);
   if(!panel) return;
-  var isOpen=panel.style.display!=='none';
-  document.querySelectorAll('.reg-expand').forEach(function(p){p.style.display='none';});
+  var isOpen=panel.classList.contains('acc-open');
+  // Close all panels
+  document.querySelectorAll('.reg-expand').forEach(function(p){
+    p.classList.remove('acc-open');
+    p.classList.add('acc-closed');
+    p.style.maxHeight='0';
+  });
   document.querySelectorAll('.reg-chevron').forEach(function(c){c.textContent='▼';c.style.color='';});
   if(isOpen){return;}
-  panel.style.display='block';
-  if(chv){chv.textContent='▲';chv.style.color='var(--gold)';}
+  // Open this one
   panel.innerHTML=buildRegStats(regTeamId);
+  panel.classList.remove('acc-closed');
+  panel.classList.add('acc-open');
+  panel.style.maxHeight=panel.scrollHeight+'px';
+  // After transition, set to none so content can grow freely
+  setTimeout(function(){if(panel.classList.contains('acc-open'))panel.style.maxHeight='none';},320);
+  if(chv){chv.textContent='▲';chv.style.color='var(--gold)';}
 }
 
 // ── CLUB LOGO LOOKUP ──────────────────────────────────────────
@@ -1306,8 +1361,10 @@ function buildTable(tour,teams){
     var zone=pos<=adv?'z-q':'z-e';
     var topBorder=i===adv?'border-top:1.5px dashed rgba(255,255,255,.1)':'';
     var regT=resolveRegTeam(t);
-    h+='<tr class="'+zone+'" style="'+topBorder+'">'+
-      '<td><strong style="font-family:\'Oswald\',sans-serif;font-size:.9rem;color:var(--gold)">'+pos+'</strong></td>'+
+    var rankClass=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    var rankBadge=i===0?'<span class="rank-gold">1</span>':i===1?'<span class="rank-silver">2</span>':i===2?'<span class="rank-bronze">3</span>':'<span class="rank-plain">'+pos+'</span>';
+    h+='<tr class="'+zone+' '+rankClass+'" style="'+topBorder+'">'+
+      '<td>'+rankBadge+'</td>'+
       '<td><div style="display:flex;align-items:center;gap:.5rem">'+logoImg(t.name,22,regT)+'<strong style="font-family:\'DM Sans\',sans-serif;font-weight:700">'+t.name+'</strong></div></td>'+
       '<td class="num">'+t.played+'</td>'+
       '<td class="num" style="color:var(--green)">'+t.won+'</td>'+
