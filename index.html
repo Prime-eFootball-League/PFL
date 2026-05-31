@@ -580,13 +580,7 @@ tbody tr:hover td{background:var(--card2)!important;filter:none}
 .skel-num{width:22px;height:12px}
 
 /* ── RANK BADGES (top 3) ── */
-.rank-gold{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#f0d080,#c9a84c);color:#000;font-family:'Anton',sans-serif;font-size:.72rem;font-weight:900;box-shadow:0 0 10px rgba(201,168,76,.5);flex-shrink:0}
-.rank-silver{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#e8e8e8,#a0a0a0);color:#000;font-family:'Anton',sans-serif;font-size:.72rem;font-weight:900;box-shadow:0 0 8px rgba(160,160,160,.4);flex-shrink:0}
-.rank-bronze{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#e8a060,#a05020);color:#fff;font-family:'Anton',sans-serif;font-size:.72rem;font-weight:900;box-shadow:0 0 8px rgba(180,100,40,.4);flex-shrink:0}
-.rank-plain{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;font-family:'Oswald',sans-serif;font-size:.85rem;color:var(--muted);flex-shrink:0}
-.rank-1 td{background:rgba(201,168,76,.04)!important}
-.rank-2 td{background:rgba(192,192,192,.025)!important}
-.rank-3 td{background:rgba(205,127,50,.025)!important}
+.rank-num{font-family:'Oswald',sans-serif;font-size:.88rem;color:var(--muted);display:inline-flex;align-items:center;gap:.25rem;white-space:nowrap}
 
 /* ── GLASS CARDS (results + fixtures only) ── */
 .r-item{background:rgba(24,34,24,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
@@ -1361,8 +1355,9 @@ function buildTable(tour,teams){
     var zone=pos<=adv?'z-q':'z-e';
     var topBorder=i===adv?'border-top:1.5px dashed rgba(255,255,255,.1)':'';
     var regT=resolveRegTeam(t);
-    var rankClass=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
-    var rankBadge=i===0?'<span class="rank-gold">1</span>':i===1?'<span class="rank-silver">2</span>':i===2?'<span class="rank-bronze">3</span>':'<span class="rank-plain">'+pos+'</span>';
+    var rankClass='';
+    var medal=i===0?' 🥇':i===1?' 🥈':i===2?' 🥉':'';
+    var rankBadge='<span class="rank-num">'+pos+medal+'</span>';
     h+='<tr class="'+zone+' '+rankClass+'" style="'+topBorder+'">'+
       '<td>'+rankBadge+'</td>'+
       '<td><div style="display:flex;align-items:center;gap:.5rem">'+logoImg(t.name,22,regT)+'<strong style="font-family:\'DM Sans\',sans-serif;font-weight:700">'+t.name+'</strong></div></td>'+
